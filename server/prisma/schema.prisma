@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // ใช้ PostgreSQL เป็นฐานข้อมูล
+  url      = env("DATABASE_URL")
+}
+
+// เพิ่ม Enum สำหรับประเภทของ Category/Transaction
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String // จะถูก Hash ใน Backend Code
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  accounts     Account[]     // ผู้ใช้มีได้หลายบัญชี
+  transactions Transaction[]
+  budgets      Budget[]
+  tags         Tag[]         // ผู้ใช้มีได้หลาย Tag ส่วนตัว
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  name         String
+  balance      Decimal       @default(0) @db.Decimal(18, 2) // ใช้ Decimal สำหรับเงิน, Precision 18, Scale 2
+  currency     String        @default("THB") // เช่น THB, USD
+  userId       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[] // ธุรกรรมที่มาจากบัญชีนี้
+
+  @@unique([userId, name]) // ชื่อบัญชีต้องไม่ซ้ำกันสำหรับผู้ใช้แต่ละคน
+  @@index([userId])
+}
+
+model Category {
+  id           String          @id @default(uuid())
+  name         String          @unique
+  type         TransactionType // ใช้ ENUM แทน String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  transactions Transaction[]
+  budgets      Budget[]
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  amount      Decimal         @db.Decimal(18, 2) // ใช้ Decimal สำหรับเงิน, Precision 18, Scale 2
+  type        TransactionType // ชนิดของธุรกรรม (INCOME/EXPENSE)
+  description String?
+  date        DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  userId      String
+  accountId   String          // ธุรกรรมต้องมาจากบัญชีไหน
+  categoryId  String
+  
+  user        User            @relation(fields: [userId], references: [id])
+  account     Account         @relation(fields: [accountId], references: [id])
+  category    Category        @relation(fields: [categoryId], references: [id])
+  
+  tags        TransactionOnTag[] // ความสัมพันธ์ Many-to-Many กับ Tag
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([date]) // เพิ่ม Index
+  @@index([type]) // เพิ่ม Index
+}
+
+model Budget {
+  id          String        @id @default(uuid())
+  amount      Decimal       @db.Decimal(18, 2) // ใช้ Decimal สำหรับเงิน, Precision 18, Scale 2
+  spent       Decimal       @default(0) @db.Decimal(18, 2) // ใช้ Decimal สำหรับเงิน, Precision 18, Scale 2
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  userId      String
+  categoryId  String?       // Optional: budget can be for overall or specific category
+  user        User          @relation(fields: [userId], references: [id])
+  category    Category?     @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([startDate]) // เพิ่ม Index
+  @@index([endDate])   // เพิ่ม Index
+}
+
+// ตาราง Tag (ป้ายกำกับ)
+model Tag {
+  id           String             @id @default(uuid())
+  name         String
+  userId       String             // Tag เป็นของแต่ละ User
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id])
+  transactions TransactionOnTag[] // ความสัมพันธ์ Many-to-Many กับ Transaction
+
+  @@unique([userId, name]) // ชื่อ Tag ต้องไม่ซ้ำกันสำหรับผู้ใช้แต่ละคน
+  @@index([userId])
+}
+
+// ตารางเชื่อม (Junction Table) สำหรับความสัมพันธ์ Many-to-Many ระหว่าง Transaction กับ Tag
+model TransactionOnTag {
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId String
+  tag           Tag         @relation(fields: [tagId], references: [id])
+  tagId         String
+  assignedAt    DateTime    @default(now())
+
+  @@id([transactionId, tagId]) // Primary Key ร่วม
+  @@index([transactionId])
+  @@index([tagId])
+}
