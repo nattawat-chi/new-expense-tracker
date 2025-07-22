@@ -1,7 +1,6 @@
-// middleware/auth0.ts
-import { auth, ConfigParams, Session } from "express-openid-connect";
+import { auth } from "express-oauth2-jwt-bearer";
 
-const config: ConfigParams = {
+const config = {
   authRequired: false,
   auth0Logout: true,
   secret: process.env.AUTH0_SECRET || "your_random_secret",
