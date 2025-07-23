@@ -11,4 +11,14 @@ router.get("/accounts", requireAuth(), async (req: Request, res: Response) => {
   res.json(accounts);
 });
 
+router.post("/accounts", requireAuth(), async (req: Request, res: Response) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  const { name, balance, currency } = req.body;
+  const account = await prisma.account.create({
+    data: { name, balance, currency, userId },
+  });
+  res.json(account);
+});
+
 export default router;

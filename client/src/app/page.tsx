@@ -17,7 +17,12 @@ export default function LandingPage() {
           </SignedOut>
           <SignedIn>
             <Link href="/dashboard">
-              <Button variant="secondary">Go to Dashboard</Button>
+              <Button
+                className="cursor-pointer hover:bg-primary/10"
+                variant="secondary"
+              >
+                Go to Dashboard
+              </Button>
             </Link>
           </SignedIn>
         </div>

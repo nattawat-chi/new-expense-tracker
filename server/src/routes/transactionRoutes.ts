@@ -10,10 +10,19 @@ router.get(
   requireAuth(),
   async (req: Request, res: Response) => {
     const { userId } = getAuth(req);
+    console.log("userId from Clerk:", userId);
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     const transactions = await prisma.transaction.findMany({
       where: { userId },
+      include: {
+        account: true,
+        category: true,
+      },
+      orderBy: {
+        date: "desc",
+      },
     });
+    console.log("transactions found:", transactions.length);
     res.json(transactions);
   }
 );

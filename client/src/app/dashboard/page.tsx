@@ -1,14 +1,18 @@
 "use client";
+import { useUser, useAuth, SignOutButton } from "@clerk/nextjs";
+import { useState } from "react";
 import {
-  useUser,
-  useAuth,
-  SignOutButton,
-  SignedIn,
-  UserButton,
-  SignedOut,
-} from "@clerk/nextjs";
-import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Input,
+  Select,
+  SelectItem,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -34,8 +38,88 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import axios from "axios";
-import { useProfile, useTransactions, useAccounts } from "@/lib/hooks";
+import { useTransactions, useAccounts, useCategories } from "@/lib/hooks";
+import { createCategory, createTransaction, createAccount } from "@/lib/api";
+
+function AddCategoryModal({ onAdded }: { onAdded?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", type: "EXPENSE" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
+
+  const handleChange = (e: any) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="secondary"
+          className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
+        >
+          <Plus /> Add Category
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md w-full">
+        <DialogHeader>
+          <DialogTitle>Add Category</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setError(null);
+            try {
+              const accessToken = await getToken();
+              if (!accessToken) {
+                setError("No access token");
+                setLoading(false);
+                return;
+              }
+              await createCategory(form, accessToken);
+              setOpen(false);
+              setForm({ name: "", type: "EXPENSE" });
+              onAdded?.();
+            } catch (err: any) {
+              setError(err?.message || "Error");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="space-y-4"
+        >
+          <Input
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Category Name"
+            required
+          />
+          <Select
+            name="type"
+            value={form.type}
+            onValueChange={(value: string) =>
+              setForm((f) => ({ ...f, type: value }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
+            </SelectContent>
+          </Select>
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
   const { getToken } = useAuth();
@@ -48,78 +132,212 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
     accountId: "",
   });
   const [loading, setLoading] = useState(false);
+  const { categories, loading: catLoading } = useCategories();
+  const { accounts, loading: accLoading } = useAccounts();
 
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
-    const token = await getToken();
-    await axios.post("http://localhost:5000/transactions", form, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setLoading(false);
-    setOpen(false);
-    setForm({
-      amount: "",
-      description: "",
-      date: "",
-      categoryId: "",
-      accountId: "",
-    });
-    onAdded?.();
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" className="w-full flex items-center gap-2">
+        <Button
+          variant="secondary"
+          className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
+        >
           <Plus /> Add Transaction
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-md w-full">
         <DialogHeader>
           <DialogTitle>Add Transaction</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            const accessToken = await getToken();
+            if (!accessToken) {
+              setLoading(false);
+              return;
+            }
+            const txData = {
+              ...form,
+              amount: Number(form.amount),
+            };
+            await createTransaction(txData, accessToken);
+            setLoading(false);
+            setOpen(false);
+            setForm({
+              amount: "",
+              description: "",
+              date: "",
+              categoryId: "",
+              accountId: "",
+            });
+            onAdded?.();
+          }}
+          className="space-y-4"
+        >
+          <Input
             name="amount"
             value={form.amount}
             onChange={handleChange}
             placeholder="Amount"
             required
-            className="input input-bordered w-full"
+            type="number"
           />
-          <input
+          <Input
             name="description"
             value={form.description}
             onChange={handleChange}
             placeholder="Description"
-            className="input input-bordered w-full"
           />
-          <input
+          <Input
             name="date"
             value={form.date}
             onChange={handleChange}
             placeholder="Date"
             type="date"
-            className="input input-bordered w-full"
           />
-          <input
+          <Select
             name="categoryId"
             value={form.categoryId}
-            onChange={handleChange}
-            placeholder="Category ID"
-            className="input input-bordered w-full"
-          />
-          <input
+            onValueChange={(value: string) =>
+              setForm((f) => ({ ...f, categoryId: value }))
+            }
+            disabled={catLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.isArray(categories) &&
+                categories.map((cat: any) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type})
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Select
             name="accountId"
             value={form.accountId}
+            onValueChange={(value: string) =>
+              setForm((f) => ({ ...f, accountId: value }))
+            }
+            disabled={accLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Account" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.isArray(accounts) &&
+                accounts.map((acc: any) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    {acc.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Saving..." : "Save"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", balance: "0", currency: "THB" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
+
+  const handleChange = (e: any) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="secondary"
+          className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
+        >
+          <Plus /> Add Account
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md w-full">
+        <DialogHeader>
+          <DialogTitle>Add Account</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            setError(null);
+            try {
+              const accessToken = await getToken();
+              if (!accessToken) {
+                setError("No access token");
+                setLoading(false);
+                return;
+              }
+              await createAccount(
+                {
+                  name: form.name,
+                  balance: Number(form.balance),
+                  currency: form.currency,
+                },
+                accessToken
+              );
+              setOpen(false);
+              setForm({ name: "", balance: "0", currency: "THB" });
+              onAdded?.();
+            } catch (err: any) {
+              setError(err?.message || "Error");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          className="space-y-4"
+        >
+          <Input
+            name="name"
+            value={form.name}
             onChange={handleChange}
-            placeholder="Account ID"
-            className="input input-bordered w-full"
+            placeholder="Account Name (เช่น บัญชีธนาคารA, เงินจากหุ้น)"
+            required
           />
+          <Input
+            name="balance"
+            value={form.balance}
+            onChange={handleChange}
+            placeholder="Initial Balance"
+            type="number"
+            min="0"
+          />
+          <Select
+            name="currency"
+            value={form.currency}
+            onValueChange={(value: string) =>
+              setForm((f) => ({ ...f, currency: value }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="THB">THB</SelectItem>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+              <SelectItem value="JPY">JPY</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Saving..." : "Save"}
           </Button>
@@ -130,10 +348,12 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
 }
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useProfile();
   const { user: clerkUser } = useUser();
-  const { transactions, loading: txLoading } = useTransactions();
-  const { accounts, loading: accLoading } = useAccounts();
+  const { transactions } = useTransactions();
+  const { accounts, refetch: refetchAccounts } = useAccounts();
+  const { categories, refetch: refetchCategories } = useCategories();
+
+  console.log(transactions);
 
   // Example: calculate total balance
   const totalBalance = Array.isArray(accounts)
@@ -161,7 +381,10 @@ export default function DashboardPage() {
     <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
       <aside className="w-64 flex flex-col py-8 px-4 gap-4 bg-background border-r shadow-sm">
-        <div className="mb-8 text-2xl font-bold tracking-tight text-foreground">
+        <div
+          onClick={() => (window.location.href = "/")}
+          className="mb-8 text-2xl font-bold tracking-tight text-foreground cursor-pointer"
+        >
           Binder
         </div>
         <nav className="flex flex-col gap-2 flex-1">
@@ -228,8 +451,10 @@ export default function DashboardPage() {
               Take a look at your current balance 👀
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
             <AddTransactionModal />
+            <AddCategoryModal onAdded={refetchCategories} />
+            <AddAccountModal onAdded={refetchAccounts} />
             {/* AddCategoryModal, AddTagModal, AddBudgetModal สามารถเพิ่มได้ในอนาคต */}
           </div>
         </div>
@@ -297,17 +522,17 @@ export default function DashboardPage() {
                   transactions.map((tx: any, idx: number) => (
                     <tr key={idx} className="border-b hover:bg-muted/50">
                       <td className="px-4 py-2 text-foreground">
-                        {tx.description}
+                        {tx.description || "-"}
                       </td>
                       <td className="px-4 py-2 text-foreground">{tx.amount}</td>
                       <td className="px-4 py-2 text-foreground">
                         {new Date(tx.date).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 text-foreground">
-                        {tx.categoryId}
+                        {tx.category.name}
                       </td>
                       <td className="px-4 py-2 text-foreground">
-                        {tx.accountId}
+                        {tx.account.name}
                       </td>
                     </tr>
                   ))}

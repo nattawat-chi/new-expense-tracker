@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import { requireAuth, getAuth } from "@clerk/express";
@@ -8,6 +9,8 @@ import transactionRoutes from "./routes/transactionRoutes";
 import budgetRoutes from "./routes/budgetRoutes";
 import tagRoutes from "./routes/tagRoutes";
 import { prisma } from "./prisma";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,14 +47,6 @@ app.get("/", (req, res) => {
   res.send("Hello from Personal Expense Tracker Backend (Clerk Auth)!");
 });
 
-// ตัวอย่าง route ที่ต้องการ auth
-app.get("/transactions", requireAuth(), async (req, res) => {
-  const { userId } = getAuth(req);
-  // ดึงข้อมูล user จาก database local ด้วย userId
-  res.json([]);
-});
-
-// Mount routes (ถ้าต้องการ auth ทุก route ให้ใส่ requireAuth() ในแต่ละไฟล์ route)
 app.use(userRoutes);
 app.use(accountRoutes);
 app.use(categoryRoutes);
