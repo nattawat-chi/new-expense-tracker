@@ -1,6 +1,6 @@
 "use client";
 import { useUser, useAuth, SignOutButton } from "@clerk/nextjs";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -113,12 +113,12 @@ function AddCategoryModal({ onAdded }: { onAdded?: () => void }) {
           variant="secondary"
           className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
         >
-          <Plus /> เพิ่มหมวดหมู่
+          <Plus /> Add Category
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>เพิ่มหมวดหมู่ใหม่</DialogTitle>
+          <DialogTitle>Add Category</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
@@ -148,7 +148,7 @@ function AddCategoryModal({ onAdded }: { onAdded?: () => void }) {
             name="name"
             value={form.name}
             onChange={handleChange}
-            placeholder="ชื่อหมวดหมู่"
+            placeholder="Category Name"
             required
           />
           <Select
@@ -159,16 +159,16 @@ function AddCategoryModal({ onAdded }: { onAdded?: () => void }) {
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกประเภท" />
+              <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="EXPENSE">รายจ่าย</SelectItem>
-              <SelectItem value="INCOME">รายรับ</SelectItem>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>
@@ -188,7 +188,6 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
     type: "EXPENSE",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { categories, loading: catLoading } = useCategories();
   const { accounts, loading: accLoading } = useAccounts();
 
@@ -202,21 +201,16 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
           variant="secondary"
           className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
         >
-          <Plus /> เพิ่มรายการ
+          <Plus /> Add Transaction
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>เพิ่มรายการใหม่</DialogTitle>
+          <DialogTitle>Add Transaction</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            setError(null);
-            if (!form.amount || !form.categoryId || !form.accountId) {
-              setError("กรุณากรอกจำนวนเงิน เลือกหมวดหมู่ และบัญชีให้ครบถ้วน");
-              return;
-            }
             setLoading(true);
             const accessToken = await getToken();
             if (!accessToken) {
@@ -261,7 +255,7 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
             name="amount"
             value={form.amount}
             onChange={handleChange}
-            placeholder="จำนวนเงิน"
+            placeholder="Amount"
             required
             type="number"
             min="0"
@@ -271,27 +265,29 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
             name="description"
             value={form.description}
             onChange={handleChange}
-            placeholder="คำอธิบาย"
+            placeholder="Description"
           />
           <Input
             name="date"
             value={form.date}
             onChange={handleChange}
-            placeholder="วันที่"
+            placeholder="Date"
             type="date"
             required
           />
           <Select
             name="categoryId"
-            value={form.categoryId}
+            value={form.categoryId || "ALL"}
             onValueChange={(value: string) =>
-              setForm((f) => ({ ...f, categoryId: value }))
+              setForm((f) => ({
+                ...f,
+                categoryId: value === "ALL" ? "" : value,
+              }))
             }
             disabled={catLoading}
-            required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกหมวดหมู่" />
+              <SelectValue placeholder="Select Category" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(categories) &&
@@ -311,10 +307,9 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
               setForm((f) => ({ ...f, accountId: value }))
             }
             disabled={accLoading}
-            required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกบัญชี" />
+              <SelectValue placeholder="Select Account" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(accounts) &&
@@ -325,9 +320,8 @@ function AddTransactionModal({ onAdded }: { onAdded?: () => void }) {
                 ))}
             </SelectContent>
           </Select>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>
@@ -427,9 +421,12 @@ function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
           />
           <Select
             name="categoryId"
-            value={form.categoryId}
+            value={form.categoryId || "ALL"}
             onValueChange={(value: string) =>
-              setForm((f) => ({ ...f, categoryId: value }))
+              setForm((f) => ({
+                ...f,
+                categoryId: value === "ALL" ? "" : value,
+              }))
             }
             disabled={catLoading}
           >
@@ -437,7 +434,7 @@ function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
               <SelectValue placeholder="เลือกหมวดหมู่ (ไม่บังคับ)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">งบประมาณรวม</SelectItem>
+              <SelectItem value="ALL">งบประมาณรวม</SelectItem>
               {Array.isArray(categories) &&
                 categories
                   .filter((cat: any) => cat.type === "EXPENSE")
@@ -458,7 +455,6 @@ function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
 }
 
 function TransactionTable({ transactions, onEdit, onDelete }: any) {
-  const { getToken } = useAuth();
   return (
     <Table>
       <TableHeader>
@@ -613,9 +609,8 @@ type MonthlyReport = {
   }>;
 };
 
-export default function EnhancedDashboard() {
+export default function DashboardPage() {
   const { user: clerkUser } = useUser();
-  const { getToken } = useAuth();
   const [filters, setFilters] = useState({
     search: "",
     categoryId: "",
@@ -626,34 +621,15 @@ export default function EnhancedDashboard() {
   });
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ใช้ useMemo ครอบ params ที่ pass เข้า custom hooks
-  const transactionsParams = useMemo(
-    () => ({
-      ...filters,
-      page: currentPage,
-      limit: 10,
-    }),
-    [filters, currentPage]
-  );
-
-  const topCategoriesParams = useMemo(
-    () => ({
-      limit: 5,
-      period: "month",
-    }),
-    []
-  );
-
-  // ถ้ามี filter หรือ period สำหรับ report ให้ใช้ useMemo เช่นกัน
-  // ตัวอย่างนี้ใช้ default (ไม่มี params)
-  const monthlyReportParams = useMemo(() => ({}), []);
-  const transactionStatsParams = useMemo(() => ({}), []);
-
   const {
     transactions,
     pagination,
     refetch: refetchTransactions,
-  } = useTransactions(transactionsParams) as {
+  } = useTransactions({
+    ...filters,
+    page: currentPage,
+    limit: 10,
+  }) as {
     transactions: Transaction[];
     pagination: Pagination | null;
     refetch: () => void;
@@ -662,17 +638,16 @@ export default function EnhancedDashboard() {
   const { categories, refetch: refetchCategories } = useCategories();
   const { budgets, refetch: refetchBudgets } = useBudgets();
   const { alerts: budgetAlerts } = useBudgetAlerts();
-  const { stats: rawTransactionStats } = useTransactionStats(
-    transactionStatsParams
-  );
+  const { stats: rawTransactionStats } = useTransactionStats();
   const transactionStats: {
     income?: { total?: number };
     expense?: { total?: number };
   } = (rawTransactionStats && (rawTransactionStats as any)) || {};
-  const incomeTotal = transactionStats.income?.total || 0;
-  const expenseTotal = transactionStats.expense?.total || 0;
-  const { topCategories } = useTopSpendingCategories(topCategoriesParams);
-  const { report: rawMonthlyReport } = useMonthlyReport(monthlyReportParams);
+  const { topCategories } = useTopSpendingCategories({
+    limit: 5,
+    period: "month",
+  });
+  const { report: rawMonthlyReport } = useMonthlyReport();
   const monthlyReport: MonthlyReport | undefined =
     rawMonthlyReport && typeof rawMonthlyReport === "object"
       ? (rawMonthlyReport as MonthlyReport)
@@ -694,6 +669,15 @@ export default function EnhancedDashboard() {
   }));
 
   // Defensive checks for transactionStats
+  const incomeTotal =
+    transactionStats && typeof transactionStats.income?.total === "number"
+      ? transactionStats.income.total
+      : 0;
+  const expenseTotal =
+    transactionStats && typeof transactionStats.expense?.total === "number"
+      ? transactionStats.expense.total
+      : 0;
+
   const barChartData =
     monthlyReport?.dailyBreakdown?.map(
       (day: { date: string; income: number; expense: number }) => ({

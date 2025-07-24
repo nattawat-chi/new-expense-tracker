@@ -5,3 +5,6 @@ export * from "./dialog";
 export * from "./theme-toggle";
 export * from "./input";
 export * from "./select";
+export * from "./progress";
+export * from "./badge";
+export * from "./table";

@@ -8,6 +8,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import budgetRoutes from "./routes/budgetRoutes";
 import tagRoutes from "./routes/tagRoutes";
+import reportRoutes from "./routes/reportRoutes";
 import { prisma } from "./prisma";
 
 dotenv.config();
@@ -53,6 +54,7 @@ app.use(categoryRoutes);
 app.use(transactionRoutes);
 app.use(budgetRoutes);
 app.use(tagRoutes);
+app.use(reportRoutes);
 
 app.listen(PORT, () => {
   console.log(`API running on port ${PORT}`);

@@ -32,6 +32,7 @@ model User {
   transactions Transaction[]
   budgets      Budget[]
   tags         Tag[]         // ผู้ใช้มีได้หลาย Tag ส่วนตัว
+  categories   Category[]    // ผู้ใช้มีได้หลาย Category
 }
 
 model Account {
@@ -51,12 +52,17 @@ model Account {
 
 model Category {
   id           String          @id @default(uuid())
-  name         String          @unique
+  name         String          
   type         TransactionType // ใช้ ENUM แทน String
+  userId       String          
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   transactions Transaction[]
   budgets      Budget[]
+  user         User            @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name]) // ชื่อหมวดหมู่ต้องไม่ซ้ำกันสำหรับผู้ใช้แต่ละคน
+  @@index([userId])
 }
 
 model Transaction {
