@@ -620,20 +620,13 @@ export default function DashboardPage() {
     endDate: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const { getToken } = useAuth();
 
   const {
     transactions,
     pagination,
     refetch: refetchTransactions,
-  } = useTransactions({
-    ...filters,
-    page: currentPage,
-    limit: 10,
-  }) as {
-    transactions: Transaction[];
-    pagination: Pagination | null;
-    refetch: () => void;
-  };
+  } = useTransactions({ ...filters, page: currentPage, limit: 10 }) as any;
   const { accounts, refetch: refetchAccounts } = useAccounts();
   const { categories, refetch: refetchCategories } = useCategories();
   const { budgets, refetch: refetchBudgets } = useBudgets();
@@ -705,7 +698,6 @@ export default function DashboardPage() {
 
   const handleExport = async () => {
     try {
-      const { getToken } = useAuth();
       const accessToken = await getToken();
       if (!accessToken) return;
 
@@ -804,9 +796,24 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-            <AddTransactionModal onAdded={refetchTransactions} />
-            <AddCategoryModal onAdded={refetchCategories} />
-            <AddBudgetModal onAdded={refetchBudgets} />
+            <AddTransactionModal
+              onAdded={async () => {
+                const accessToken = await getToken();
+                if (accessToken) refetchTransactions();
+              }}
+            />
+            <AddCategoryModal
+              onAdded={async () => {
+                const accessToken = await getToken();
+                if (accessToken) refetchCategories();
+              }}
+            />
+            <AddBudgetModal
+              onAdded={async () => {
+                const accessToken = await getToken();
+                if (accessToken) refetchBudgets();
+              }}
+            />
             <Button variant="outline" onClick={handleExport}>
               <Download className="h-4 w-4 mr-2" />
               ส่งออก
@@ -1089,7 +1096,6 @@ export default function DashboardPage() {
               onEdit={(tx: any) => console.log("Edit:", tx)}
               onDelete={async (id: string) => {
                 try {
-                  const { getToken } = useAuth();
                   const accessToken = await getToken();
                   if (!accessToken) return;
                   await deleteTransaction(id, accessToken);
@@ -1099,7 +1105,7 @@ export default function DashboardPage() {
                 }
               }}
             />
-            {pagination && (
+            {/* pagination && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
                   แสดง{" "}
@@ -1140,7 +1146,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </div>
-            )}
+            ) */}
           </CardContent>
         </Card>
       </main>
