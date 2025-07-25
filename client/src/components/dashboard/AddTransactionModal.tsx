@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import {
   Button,
@@ -21,7 +21,7 @@ export function AddTransactionModal({
   onAdded,
   categories,
   catLoading,
-  refetchCategories,
+  refetchCategories, // ไม่ใช้แล้ว แต่เก็บไว้เพื่อ backward compatibility
 }: {
   onAdded?: () => void;
   categories: any[];
@@ -42,16 +42,24 @@ export function AddTransactionModal({
   const [error, setError] = useState<string | null>(null);
   const { accounts, accountsLoading: accLoading } = useGlobalStore();
 
-  // เมื่อ modal เปิด ให้ refetchCategories
-  useEffect(() => {
-    if (open) {
-      refetchCategories();
-    }
-  }, [open, refetchCategories]);
+  // ลบ useEffect ที่เรียก refetchCategories ออก
+  // categories จะถูกโหลดจาก initial load แล้ว
 
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  const resetForm = () => {
+    setForm({
+      amount: "",
+      description: "",
+      date: new Date().toISOString().split("T")[0],
+      categoryId: "",
+      accountId: "",
+      type: "EXPENSE",
+    });
+  };
+
+  console.log(categories);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -74,36 +82,45 @@ export function AddTransactionModal({
               setError("กรุณากรอกจำนวนเงิน เลือกหมวดหมู่ และบัญชีให้ครบถ้วน");
               return;
             }
+
             setLoading(true);
-            const accessToken = await getToken();
-            if (!accessToken) {
+            try {
+              const accessToken = await getToken();
+              if (!accessToken) {
+                setError("ไม่สามารถรับ access token ได้");
+                return;
+              }
+
+              const txData = {
+                ...form,
+                amount: Number(form.amount),
+              };
+
+              await createTransaction(txData, accessToken);
+
+              // ปิด modal และ reset form
+              setOpen(false);
+              resetForm();
+              setError(null);
+
+              // เรียก callback
+              onAdded?.();
+            } catch (err: any) {
+              setError(
+                err?.response?.data?.message || err?.message || "เกิดข้อผิดพลาด"
+              );
+            } finally {
               setLoading(false);
-              return;
             }
-            const txData = {
-              ...form,
-              amount: Number(form.amount),
-            };
-            await createTransaction(txData, accessToken);
-            setLoading(false);
-            setOpen(false);
-            setForm({
-              amount: "",
-              description: "",
-              date: new Date().toISOString().split("T")[0],
-              categoryId: "",
-              accountId: "",
-              type: "EXPENSE",
-            });
-            onAdded?.();
           }}
           className="space-y-4"
         >
           <Select
             name="type"
             value={form.type}
-            onValueChange={(value: string) =>
-              setForm((f) => ({ ...f, type: value }))
+            onValueChange={
+              (value: string) =>
+                setForm((f) => ({ ...f, type: value, categoryId: "" })) // reset categoryId เมื่อเปลี่ยน type
             }
           >
             <SelectTrigger>
@@ -114,6 +131,7 @@ export function AddTransactionModal({
               <SelectItem value="INCOME">รายรับ</SelectItem>
             </SelectContent>
           </Select>
+
           <Input
             name="amount"
             value={form.amount}
@@ -124,12 +142,14 @@ export function AddTransactionModal({
             min="0"
             step="0.01"
           />
+
           <Input
             name="description"
             value={form.description}
             onChange={handleChange}
             placeholder="คำอธิบาย"
           />
+
           <Input
             name="date"
             value={form.date}
@@ -161,6 +181,7 @@ export function AddTransactionModal({
                   ))}
             </SelectContent>
           </Select>
+
           <Select
             name="accountId"
             value={form.accountId}
@@ -182,7 +203,9 @@ export function AddTransactionModal({
                 ))}
             </SelectContent>
           </Select>
+
           {error && <div className="text-red-500 text-sm">{error}</div>}
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "กำลังบันทึก..." : "บันทึก"}
           </Button>

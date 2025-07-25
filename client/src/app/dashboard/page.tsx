@@ -1,6 +1,6 @@
 "use client";
 import { useUser, useAuth } from "@clerk/nextjs";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 import { Search } from "lucide-react";
 import { useGlobalStore, GlobalStoreState } from "@/lib/store";
@@ -27,7 +27,6 @@ import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { TransactionSection } from "@/components/dashboard/TransactionSection";
 import { ExportButton } from "@/components/dashboard/ExportButton";
 
-// Color palette for charts
 const COLORS = [
   "#0088FE",
   "#00C49F",
@@ -42,16 +41,15 @@ const COLORS = [
 export default function EnhancedDashboard() {
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
-  // Replace useState for filters with useDashboardFilters
   const [filters, setFilters] = useDashboardFilters();
   const [currentPage, setCurrentPage] = useState(1);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
-  // Add state for delete confirmation
   const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
-  // ป้องกัน fetch ซ้ำ
-  const isFetchingRef = useRef(false);
 
-  // ใช้ useMemo ครอบ params ที่ pass เข้า custom hooks
+  // ป้องกัน fetch ซ้ำ
+  const lastFetchParamsRef = useRef<string>("");
+  const isInitialLoadRef = useRef(true);
+
   const transactionsParams = useMemo(
     () => ({
       ...filters,
@@ -61,7 +59,6 @@ export default function EnhancedDashboard() {
     [filters, currentPage]
   );
 
-  // memoize params
   const transactionStatsParams = useMemo(() => ({}), []);
   const topCategoriesParams = useMemo(
     () => ({ limit: 5, period: "month" }),
@@ -97,78 +94,108 @@ export default function EnhancedDashboard() {
     fetchMonthlyReport,
   } = useGlobalStore() as GlobalStoreState;
 
+  // แยก initial data load ออกจาก transaction params
   useEffect(() => {
-    let debounceTimeout: NodeJS.Timeout;
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
-    debounceTimeout = setTimeout(() => {
-      console.log("[useEffect] fetchTransactions triggered (debounced)", {
-        transactionsParams,
-        currentPage,
-        filters,
-      });
-      (async () => {
-        const accessToken = await getToken();
-        if (!accessToken) {
-          isFetchingRef.current = false;
-          return;
-        }
-        try {
-          await Promise.all([
-            fetchCategories(accessToken),
-            fetchAccounts(accessToken),
-            fetchBudgets(accessToken),
-            fetchTransactions(accessToken, transactionsParams),
-          ]);
-        } finally {
-          isFetchingRef.current = false;
-        }
-      })();
-    }, 400); // debounce 400ms
+    let mounted = true;
+
+    (async () => {
+      const accessToken = await getToken();
+      if (!accessToken || !mounted) return;
+
+      if (isInitialLoadRef.current) {
+        // Load initial data ครั้งเดียว
+        await Promise.all([
+          fetchCategories(accessToken),
+          fetchAccounts(accessToken),
+          fetchBudgets(accessToken),
+          fetchStats(accessToken, transactionStatsParams),
+          fetchTopCategories(accessToken, topCategoriesParams),
+          fetchMonthlyReport(accessToken, monthlyReportParams),
+        ]);
+        isInitialLoadRef.current = false;
+      }
+    })();
+
     return () => {
-      clearTimeout(debounceTimeout);
-      isFetchingRef.current = false;
+      mounted = false;
     };
-  }, [transactionsParams]);
+  }, [getToken]); // ไม่ต้องใส่ dependencies อื่น
 
-  // useEffect สำหรับ fetchStats
+  // แยก transaction fetch ออกมา และใช้ debounce
   useEffect(() => {
-    let debounceTimeout: NodeJS.Timeout;
-    debounceTimeout = setTimeout(() => {
-      (async () => {
-        const accessToken = await getToken();
-        if (!accessToken) return;
-        fetchStats(accessToken, transactionStatsParams);
-      })();
-    }, 400);
-    return () => clearTimeout(debounceTimeout);
-  }, [transactionStatsParams]);
+    const paramsString = JSON.stringify(transactionsParams);
 
-  // useEffect สำหรับ fetchTopCategories
-  useEffect(() => {
-    let debounceTimeout: NodeJS.Timeout;
-    debounceTimeout = setTimeout(() => {
-      (async () => {
-        const accessToken = await getToken();
-        if (!accessToken) return;
-        fetchTopCategories(accessToken, topCategoriesParams);
-      })();
-    }, 400);
-    return () => clearTimeout(debounceTimeout);
-  }, [topCategoriesParams]);
+    // ถ้า params เหมือนเดิม ไม่ต้อง fetch
+    if (lastFetchParamsRef.current === paramsString) {
+      return;
+    }
 
-  // useEffect สำหรับ fetchMonthlyReport
-  useEffect(() => {
-    let debounceTimeout: NodeJS.Timeout;
-    debounceTimeout = setTimeout(() => {
-      (async () => {
-        const accessToken = await getToken();
-        if (!accessToken) return;
-        fetchMonthlyReport(accessToken, monthlyReportParams);
-      })();
-    }, 400);
+    const debounceTimeout = setTimeout(async () => {
+      const accessToken = await getToken();
+      if (!accessToken) return;
+
+      await fetchTransactions(accessToken, transactionsParams);
+      lastFetchParamsRef.current = paramsString;
+    }, 300);
+
     return () => clearTimeout(debounceTimeout);
-  }, [monthlyReportParams]);
+  }, [transactionsParams, getToken, fetchTransactions]);
+
+  // Callbacks ที่ไม่ trigger re-fetch categories
+  const handleTransactionAdded = useCallback(async () => {
+    console.log("[AddTransactionModal] onAdded called");
+
+    const accessToken = await getToken();
+    if (!accessToken) return;
+
+    // สร้าง params สำหรับ page 1 เพื่อแสดงรายการล่าสุด
+    const freshParams = {
+      ...filters,
+      page: 1,
+      limit: 10,
+    };
+
+    // Fetch transactions ใหม่ทันที
+    await fetchTransactions(accessToken, freshParams);
+
+    // อัปเดท stats ด้วยเพื่อให้ summary cards อัปเดท
+    await fetchStats(accessToken, transactionStatsParams);
+
+    // อัปเดท accounts balance (ในกรณีที่ balance เปลี่ยน)
+    await fetchAccounts(accessToken);
+
+    // ตั้ง currentPage เป็น 1 เพื่อให้ UI sync
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [
+    filters,
+    currentPage,
+    getToken,
+    fetchTransactions,
+    fetchStats,
+    fetchAccounts,
+    transactionStatsParams,
+  ]);
+
+  const handleCategoryAdded = useCallback(async () => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    // เฉพาะ categories ที่ต้อง refetch
+    await fetchCategories(accessToken);
+  }, [getToken, fetchCategories]);
+
+  const handleBudgetAdded = useCallback(async () => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    await fetchBudgets(accessToken);
+  }, [getToken, fetchBudgets]);
+
+  const handleAccountAdded = useCallback(async () => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    await fetchAccounts(accessToken);
+  }, [getToken, fetchAccounts]);
 
   // Calculate total balance
   const totalBalance = Array.isArray(accounts)
@@ -205,26 +232,33 @@ export default function EnhancedDashboard() {
   const handleDelete = async (id: string) => {
     setDeleteTxId(id);
   };
+
   const confirmDelete = async () => {
     if (!deleteTxId) return;
     try {
       const accessToken = await getToken();
       if (!accessToken) return;
+
       await deleteTransaction(deleteTxId, accessToken);
       setDeleteTxId(null);
-      fetchTransactions(accessToken, transactionsParams);
+
+      // Refetch data ทันที
+      await Promise.all([
+        fetchTransactions(accessToken, transactionsParams),
+        fetchStats(accessToken, transactionStatsParams),
+        fetchAccounts(accessToken), // อัปเดท account balance
+      ]);
     } catch (error) {
+      console.error("Delete failed:", error);
       setDeleteTxId(null);
-      // handle error if needed
     }
   };
+
   const cancelDelete = () => setDeleteTxId(null);
 
-  // SummaryCards
   const incomeTotal = stats?.income?.total || 0;
   const expenseTotal = stats?.expense?.total || 0;
 
-  // Chart data
   const pieChartData =
     topCategories?.map((cat: any, index: number) => ({
       name: cat.categoryName,
@@ -241,14 +275,11 @@ export default function EnhancedDashboard() {
       })
     ) || [];
 
-  // Budget Alerts
   const budgetAlerts = alerts;
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
+    <div className="min-h-screen flex bg-background mt-2">
       <DashboardSidebar clerkUser={clerkUser} />
-      {/* Main Content */}
       <main className="flex-1 p-8 bg-background overflow-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
@@ -261,56 +292,40 @@ export default function EnhancedDashboard() {
           </div>
           <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
             <AddTransactionModal
-              onAdded={() => {
-                console.log("[AddTransactionModal] onAdded called", {
-                  currentPage,
-                });
-                if (currentPage !== 1) setCurrentPage(1);
-              }}
+              onAdded={handleTransactionAdded}
               categories={categories}
               catLoading={catLoading}
-              refetchCategories={async () => {
-                const accessToken = await getToken();
-                if (!accessToken) return;
-                fetchCategories(accessToken);
-              }}
+              refetchCategories={() => {}} // ไม่ต้อง refetch
             />
             <AddCategoryModal
-              onAdded={async () => {
-                const accessToken = await getToken();
-                if (!accessToken) return;
-                fetchCategories(accessToken);
-              }}
+              onAdded={handleCategoryAdded}
               categories={categories}
               catLoading={catLoading}
-              refetchCategories={async () => {
-                const accessToken = await getToken();
-                if (!accessToken) return;
-                fetchCategories(accessToken);
-              }}
+              refetchCategories={() => {}} // ไม่ต้อง refetch
             />
-            <AddBudgetModal
-              onAdded={async () => {
-                const accessToken = await getToken();
-                if (!accessToken) return;
-                fetchBudgets(accessToken);
-              }}
-            />
-            <AddAccountModal
-              onAdded={async () => {
-                const accessToken = await getToken();
-                if (!accessToken) return;
-                fetchAccounts(accessToken);
-              }}
-            />
+            <AddBudgetModal onAdded={handleBudgetAdded} />
+            <AddAccountModal onAdded={handleAccountAdded} />
             <ExportButton onExport={handleExport} />
           </div>
         </div>
 
-        {/* Budgets Section */}
-        <BudgetSection budgets={budgets} />
-
-        {/* Search and Filter */}
+        <BudgetSection
+          budgets={budgets}
+          totalBalance={totalBalance}
+          incomeTotal={incomeTotal}
+          expenseTotal={expenseTotal}
+          pieChartData={pieChartData}
+          barChartData={barChartData}
+        />
+        {/* <SummaryCards
+          totalBalance={totalBalance}
+          incomeTotal={incomeTotal}
+          expenseTotal={expenseTotal}
+        />
+        <DashboardCharts
+          pieChartData={pieChartData}
+          barChartData={barChartData}
+        /> */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -327,23 +342,8 @@ export default function EnhancedDashboard() {
           </CardContent>
         </Card>
 
-        {/* Summary Cards */}
-        <SummaryCards
-          totalBalance={totalBalance}
-          incomeTotal={incomeTotal}
-          expenseTotal={expenseTotal}
-        />
-
-        {/* Charts Section */}
-        <DashboardCharts
-          pieChartData={pieChartData}
-          barChartData={barChartData}
-        />
-
-        {/* Budget Alerts */}
         <BudgetAlertsSection budgetAlerts={budgetAlerts} />
 
-        {/* Transactions Table + Pagination */}
         <Card>
           <CardHeader>
             <CardTitle>รายการล่าสุด</CardTitle>
@@ -361,7 +361,6 @@ export default function EnhancedDashboard() {
           </CardContent>
         </Card>
 
-        {/* Edit Transaction Modal */}
         {editingTransaction && (
           <EditTransactionModal
             open={!!editingTransaction}
@@ -370,12 +369,17 @@ export default function EnhancedDashboard() {
             onSaved={async () => {
               const accessToken = await getToken();
               if (!accessToken) return;
-              fetchTransactions(accessToken, transactionsParams);
+
+              // Refetch data ทันที
+              await Promise.all([
+                fetchTransactions(accessToken, transactionsParams),
+                fetchStats(accessToken, transactionStatsParams),
+                fetchAccounts(accessToken), // อัปเดท account balance
+              ]);
             }}
           />
         )}
 
-        {/* Confirm Delete Modal */}
         <ConfirmDeleteModal
           open={!!deleteTxId}
           onConfirm={confirmDelete}

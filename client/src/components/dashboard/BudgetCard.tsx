@@ -14,7 +14,7 @@ export function BudgetCard({ budget }: { budget: any }) {
   const isNearLimit = budget.isNearLimit;
 
   return (
-    <Card className="relative">
+    <Card className="flex flex-col w-1/3 h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{budget.category?.name || "งบประมาณรวม"}</span>
@@ -60,7 +60,7 @@ export function BudgetCard({ budget }: { budget: any }) {
             <div className="flex justify-between text-sm">
               <span>เปอร์เซ็นต์ที่ใช้:</span>
               <span className="font-semibold">
-                {percentageUsed.toFixed(1)}%
+                {Number(percentageUsed).toFixed(1)}%
               </span>
             </div>
             <Progress
