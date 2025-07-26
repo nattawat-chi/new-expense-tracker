@@ -4,8 +4,15 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 import { Search } from "lucide-react";
 import { useGlobalStore, GlobalStoreState } from "@/lib/store";
-import { deleteTransaction, exportTransactions } from "@/lib/api";
-import { AddCategoryModal } from "@/components/dashboard/AddCategoryModal";
+import {
+  createCategory,
+  deleteCategory,
+  deleteTransaction,
+  updateCategory,
+  exportTransactions,
+} from "@/lib/api";
+import React from "react";
+// import { AddCategoryModal } from "@/components/dashboard/AddCategoryModal";
 import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
 import { AddBudgetModal } from "@/components/dashboard/AddBudgetModal";
 import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
@@ -26,6 +33,8 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { BudgetSection } from "@/components/dashboard/BudgetSection";
 import { TransactionSection } from "@/components/dashboard/TransactionSection";
 import { ExportButton } from "@/components/dashboard/ExportButton";
+import CategoryManagementModal from "@/components/dashboard/AddCategoryModal";
+import { Button } from "@/components/ui/button";
 
 const COLORS = [
   "#0088FE",
@@ -45,6 +54,9 @@ export default function EnhancedDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
+
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = React.useState(false);
 
   // ป้องกัน fetch ซ้ำ
   const lastFetchParamsRef = useRef<string>("");
@@ -178,12 +190,12 @@ export default function EnhancedDashboard() {
     transactionStatsParams,
   ]);
 
-  const handleCategoryAdded = useCallback(async () => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    // เฉพาะ categories ที่ต้อง refetch
-    await fetchCategories(accessToken);
-  }, [getToken, fetchCategories]);
+  // const handleCategoryAdded = useCallback(async () => {
+  //   const accessToken = await getToken();
+  //   if (!accessToken) return;
+  //   // เฉพาะ categories ที่ต้อง refetch
+  //   await fetchCategories(accessToken);
+  // }, [getToken, fetchCategories]);
 
   const handleBudgetAdded = useCallback(async () => {
     const accessToken = await getToken();
@@ -196,6 +208,44 @@ export default function EnhancedDashboard() {
     if (!accessToken) return;
     await fetchAccounts(accessToken);
   }, [getToken, fetchAccounts]);
+
+  const handleAddCategory = async (form: { name: string; type: string }) => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    await createCategory(
+      { ...form, type: form.type.toUpperCase() },
+      accessToken
+    );
+    await fetchCategories(accessToken);
+  };
+
+  const handleEditCategory = async (
+    id: string,
+    form: { name: string; type: string }
+  ) => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    await updateCategory(
+      id,
+      { ...form, type: form.type.toUpperCase() },
+      accessToken
+    );
+    await fetchCategories(accessToken);
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    const accessToken = await getToken();
+    if (!accessToken) return;
+    await deleteCategory(id, accessToken);
+    await fetchCategories(accessToken);
+  };
+
+  // แปลงค่า categories ให้ตรงกับ modal
+  const normalizedCategories =
+    categories?.map((cat: any) => ({
+      ...cat,
+      type: cat.type?.toUpperCase() || "EXPENSE",
+    })) || [];
 
   // Calculate total balance
   const totalBalance = Array.isArray(accounts)
@@ -297,11 +347,26 @@ export default function EnhancedDashboard() {
               catLoading={catLoading}
               refetchCategories={() => {}} // ไม่ต้อง refetch
             />
-            <AddCategoryModal
+            <Button
+              onClick={() => setCategoryModalOpen(true)}
+              variant="secondary"
+              className="flex items-center gap-2 w-full md:w-auto"
+            >
+              จัดการหมวดหมู่
+            </Button>
+            {/* <AddCategoryModal
               onAdded={handleCategoryAdded}
               categories={categories}
               catLoading={catLoading}
               refetchCategories={() => {}} // ไม่ต้อง refetch
+            /> */}
+            <CategoryManagementModal
+              open={categoryModalOpen}
+              categories={normalizedCategories}
+              onClose={() => setCategoryModalOpen(false)}
+              onAddCategory={handleAddCategory}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
             <AddBudgetModal onAdded={handleBudgetAdded} />
             <AddAccountModal onAdded={handleAccountAdded} />
@@ -337,7 +402,7 @@ export default function EnhancedDashboard() {
             <DashboardFilterBar
               filters={filters}
               setFilters={setFilters}
-              categories={categories}
+              categories={normalizedCategories}
             />
           </CardContent>
         </Card>
