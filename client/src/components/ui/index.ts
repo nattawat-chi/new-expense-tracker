@@ -8,3 +8,4 @@ export * from "./select";
 export * from "./progress";
 export * from "./badge";
 export * from "./table";
+export * from "./tabs";

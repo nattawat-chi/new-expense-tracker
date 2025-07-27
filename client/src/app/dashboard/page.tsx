@@ -35,6 +35,7 @@ import { TransactionSection } from "@/components/dashboard/TransactionSection";
 import { ExportButton } from "@/components/dashboard/ExportButton";
 import CategoryManagementModal from "@/components/dashboard/AddCategoryModal";
 import { Button } from "@/components/ui/button";
+import { ProtectedRoute, ErrorBoundary } from "@/components/auth";
 
 const COLORS = [
   "#0088FE",
@@ -328,61 +329,64 @@ export default function EnhancedDashboard() {
   const budgetAlerts = alerts;
 
   return (
-    <div className="min-h-screen flex bg-background mt-2">
-      <DashboardSidebar clerkUser={clerkUser} />
-      <main className="flex-1 p-8 bg-background overflow-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-1 text-foreground">
-              สวัสดี, {clerkUser?.firstName || clerkUser?.fullName || "ผู้ใช้"}
-            </h1>
-            <p className="text-muted-foreground">
-              ดูยอดเงินคงเหลือและสรุปการเงินของคุณ 👀
-            </p>
-          </div>
-          <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-            <AddTransactionModal
-              onAdded={handleTransactionAdded}
-              categories={categories}
-              catLoading={catLoading}
-              refetchCategories={() => {}} // ไม่ต้อง refetch
-            />
-            <Button
-              onClick={() => setCategoryModalOpen(true)}
-              variant="secondary"
-              className="flex items-center gap-2 w-full md:w-auto"
-            >
-              จัดการหมวดหมู่
-            </Button>
-            {/* <AddCategoryModal
+    <ErrorBoundary>
+      <ProtectedRoute>
+        <div className="min-h-screen flex bg-background mt-2">
+          <DashboardSidebar clerkUser={clerkUser} />
+          <main className="flex-1 p-8 bg-background overflow-auto">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-1 text-foreground">
+                  สวัสดี,{" "}
+                  {clerkUser?.firstName || clerkUser?.fullName || "ผู้ใช้"}
+                </h1>
+                <p className="text-muted-foreground">
+                  ดูยอดเงินคงเหลือและสรุปการเงินของคุณ 👀
+                </p>
+              </div>
+              <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <AddTransactionModal
+                  onAdded={handleTransactionAdded}
+                  categories={categories}
+                  catLoading={catLoading}
+                  refetchCategories={() => {}} // ไม่ต้อง refetch
+                />
+                <Button
+                  onClick={() => setCategoryModalOpen(true)}
+                  variant="secondary"
+                  className="flex items-center gap-2 w-full md:w-auto"
+                >
+                  จัดการหมวดหมู่
+                </Button>
+                {/* <AddCategoryModal
               onAdded={handleCategoryAdded}
               categories={categories}
               catLoading={catLoading}
               refetchCategories={() => {}} // ไม่ต้อง refetch
             /> */}
-            <CategoryManagementModal
-              open={categoryModalOpen}
-              categories={normalizedCategories}
-              onClose={() => setCategoryModalOpen(false)}
-              onAddCategory={handleAddCategory}
-              onEditCategory={handleEditCategory}
-              onDeleteCategory={handleDeleteCategory}
-            />
-            <AddBudgetModal onAdded={handleBudgetAdded} />
-            <AddAccountModal onAdded={handleAccountAdded} />
-            <ExportButton onExport={handleExport} />
-          </div>
-        </div>
+                <CategoryManagementModal
+                  open={categoryModalOpen}
+                  categories={normalizedCategories}
+                  onClose={() => setCategoryModalOpen(false)}
+                  onAddCategory={handleAddCategory}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                />
+                <AddBudgetModal onAdded={handleBudgetAdded} />
+                <AddAccountModal onAdded={handleAccountAdded} />
+                <ExportButton onExport={handleExport} />
+              </div>
+            </div>
 
-        <BudgetSection
-          budgets={budgets}
-          totalBalance={totalBalance}
-          incomeTotal={incomeTotal}
-          expenseTotal={expenseTotal}
-          pieChartData={pieChartData}
-          barChartData={barChartData}
-        />
-        {/* <SummaryCards
+            <BudgetSection
+              budgets={budgets}
+              totalBalance={totalBalance}
+              incomeTotal={incomeTotal}
+              expenseTotal={expenseTotal}
+              pieChartData={pieChartData}
+              barChartData={barChartData}
+            />
+            {/* <SummaryCards
           totalBalance={totalBalance}
           incomeTotal={incomeTotal}
           expenseTotal={expenseTotal}
@@ -391,66 +395,68 @@ export default function EnhancedDashboard() {
           pieChartData={pieChartData}
           barChartData={barChartData}
         /> */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              ค้นหาและกรองรายการ
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DashboardFilterBar
-              filters={filters}
-              setFilters={setFilters}
-              categories={normalizedCategories}
-            />
-          </CardContent>
-        </Card>
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  ค้นหาและกรองรายการ
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DashboardFilterBar
+                  filters={filters}
+                  setFilters={setFilters}
+                  categories={normalizedCategories}
+                />
+              </CardContent>
+            </Card>
 
-        <BudgetAlertsSection budgetAlerts={budgetAlerts} />
+            <BudgetAlertsSection budgetAlerts={budgetAlerts} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>รายการล่าสุด</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {pagination ? (
-              <TransactionSection
-                transactions={transactions as Transaction[]}
-                pagination={pagination}
-                onEdit={setEditingTransaction}
-                onDelete={handleDelete}
-                setCurrentPage={setCurrentPage}
+            <Card>
+              <CardHeader>
+                <CardTitle>รายการล่าสุด</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pagination ? (
+                  <TransactionSection
+                    transactions={transactions as Transaction[]}
+                    pagination={pagination}
+                    onEdit={setEditingTransaction}
+                    onDelete={handleDelete}
+                    setCurrentPage={setCurrentPage}
+                  />
+                ) : null}
+              </CardContent>
+            </Card>
+
+            {editingTransaction && (
+              <EditTransactionModal
+                open={!!editingTransaction}
+                onOpenChange={setEditingTransaction}
+                transaction={editingTransaction}
+                onSaved={async () => {
+                  const accessToken = await getToken();
+                  if (!accessToken) return;
+
+                  // Refetch data ทันที
+                  await Promise.all([
+                    fetchTransactions(accessToken, transactionsParams),
+                    fetchStats(accessToken, transactionStatsParams),
+                    fetchAccounts(accessToken), // อัปเดท account balance
+                  ]);
+                }}
               />
-            ) : null}
-          </CardContent>
-        </Card>
+            )}
 
-        {editingTransaction && (
-          <EditTransactionModal
-            open={!!editingTransaction}
-            onOpenChange={setEditingTransaction}
-            transaction={editingTransaction}
-            onSaved={async () => {
-              const accessToken = await getToken();
-              if (!accessToken) return;
-
-              // Refetch data ทันที
-              await Promise.all([
-                fetchTransactions(accessToken, transactionsParams),
-                fetchStats(accessToken, transactionStatsParams),
-                fetchAccounts(accessToken), // อัปเดท account balance
-              ]);
-            }}
-          />
-        )}
-
-        <ConfirmDeleteModal
-          open={!!deleteTxId}
-          onConfirm={confirmDelete}
-          onCancel={cancelDelete}
-        />
-      </main>
-    </div>
+            <ConfirmDeleteModal
+              open={!!deleteTxId}
+              onConfirm={confirmDelete}
+              onCancel={cancelDelete}
+            />
+          </main>
+        </div>
+      </ProtectedRoute>
+    </ErrorBoundary>
   );
 }

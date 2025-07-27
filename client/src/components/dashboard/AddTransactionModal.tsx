@@ -59,7 +59,6 @@ export function AddTransactionModal({
     });
   };
 
-  console.log(categories);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

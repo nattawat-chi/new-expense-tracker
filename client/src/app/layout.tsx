@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ClerkProvider } from "@clerk/nextjs";
+import AuthProvider from "@/components/auth/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,11 +44,13 @@ export default function RootLayout({
           data-theme-loaded="false"
         >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <ThemeHydrationFix />
-            <div className="fixed top-3 right-5 z-50">
-              <ThemeToggle />
-            </div>
-            {children}
+            <AuthProvider>
+              <ThemeHydrationFix />
+              <div className="fixed top-3 right-5 z-50">
+                <ThemeToggle />
+              </div>
+              {children}
+            </AuthProvider>
           </ThemeProvider>
         </body>
       </html>

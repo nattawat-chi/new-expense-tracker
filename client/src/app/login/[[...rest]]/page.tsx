@@ -12,6 +12,8 @@ export default function LoginPage() {
             colorPrimary: "#6c47ff",
           },
         }}
+        redirectUrl="/dashboard"
+        afterSignInUrl="/dashboard"
       />
       <Link href="/" className="absolute top-4 left-4 flex items-center gap-2">
         <ArrowLeft /> Back to landing page

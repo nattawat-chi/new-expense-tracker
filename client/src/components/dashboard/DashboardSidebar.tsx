@@ -6,6 +6,7 @@ import {
   User,
   Settings,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 import { SignOutButton } from "@clerk/nextjs";
 
@@ -28,10 +29,10 @@ export function DashboardSidebar({ clerkUser }: { clerkUser: any }) {
         </Button>
         <Button
           variant="ghost"
-          className="flex items-center gap-3 justify-start text-foreground/70"
-          disabled
+          className="flex items-center gap-3 justify-start text-foreground"
+          onClick={() => (window.location.href = "/reports")}
         >
-          <FileText /> รายงาน
+          <BarChart3 /> รายงานและวิเคราะห์
         </Button>
         <Button
           variant="ghost"
