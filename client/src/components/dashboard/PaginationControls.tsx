@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui";
 import type { Pagination } from "./types";
 
@@ -11,9 +12,9 @@ export function PaginationControls({
   return (
     <div className="flex items-center justify-between mt-4">
       <div className="text-sm text-muted-foreground">
-        แสดง {(pagination.page - 1) * pagination.limit + 1} ถึง{" "}
-        {Math.min(pagination.page * pagination.limit, pagination.total)} จาก{" "}
-        {pagination.total} รายการ
+        Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+        {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+        {pagination.total} items
       </div>
       <div className="flex gap-2">
         <Button
@@ -22,7 +23,7 @@ export function PaginationControls({
           disabled={pagination.page <= 1}
           onClick={() => setCurrentPage(pagination.page - 1)}
         >
-          ก่อนหน้า
+          Previous
         </Button>
         <Button
           variant="outline"
@@ -30,7 +31,7 @@ export function PaginationControls({
           disabled={pagination.page >= pagination.pages}
           onClick={() => setCurrentPage(pagination.page + 1)}
         >
-          ถัดไป
+          Next
         </Button>
       </div>
     </div>

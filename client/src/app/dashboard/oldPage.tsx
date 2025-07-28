@@ -434,7 +434,7 @@ function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
               <SelectValue placeholder="เลือกหมวดหมู่ (ไม่บังคับ)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">งบประมาณรวม</SelectItem>
+              <SelectItem value="ALL">Total Budget</SelectItem>
               {Array.isArray(categories) &&
                 categories
                   .filter((cat: any) => cat.type === "EXPENSE")

@@ -14,7 +14,7 @@ export function SummaryCards({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">ยอดเงินคงเหลือ</CardTitle>
+          <CardTitle className="text-sm font-medium">Balance</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -25,7 +25,7 @@ export function SummaryCards({
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">รายรับเดือนนี้</CardTitle>
+          <CardTitle className="text-sm font-medium">Income</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -36,7 +36,7 @@ export function SummaryCards({
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">รายจ่ายเดือนนี้</CardTitle>
+          <CardTitle className="text-sm font-medium">Expense</CardTitle>
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -47,7 +47,7 @@ export function SummaryCards({
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">ยอดสุทธิ</CardTitle>
+          <CardTitle className="text-sm font-medium">Net</CardTitle>
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>

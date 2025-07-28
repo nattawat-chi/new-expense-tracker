@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -69,14 +70,14 @@ export function EditTransactionModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>แก้ไขรายการ</DialogTitle>
+          <DialogTitle>Edit Transaction</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             setError(null);
             if (!form.amount || !form.categoryId || !form.accountId) {
-              setError("กรุณากรอกจำนวนเงิน เลือกหมวดหมู่ และบัญชีให้ครบถ้วน");
+              setError("Please fill in the amount, category and account");
               return;
             }
             setLoading(true);
@@ -104,18 +105,18 @@ export function EditTransactionModal({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกประเภท" />
+              <SelectValue placeholder="Select Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="EXPENSE">รายจ่าย</SelectItem>
-              <SelectItem value="INCOME">รายรับ</SelectItem>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
           <Input
             name="amount"
             value={form.amount}
             onChange={handleChange}
-            placeholder="จำนวนเงิน"
+            placeholder="Amount"
             required
             type="number"
             min="0"
@@ -125,13 +126,13 @@ export function EditTransactionModal({
             name="description"
             value={form.description}
             onChange={handleChange}
-            placeholder="คำอธิบาย"
+            placeholder="Description"
           />
           <Input
             name="date"
             value={form.date}
             onChange={handleChange}
-            placeholder="วันที่"
+            placeholder="Date"
             type="date"
             required
           />
@@ -145,7 +146,7 @@ export function EditTransactionModal({
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกหมวดหมู่" />
+              <SelectValue placeholder="Select Category" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(categories) &&
@@ -168,7 +169,7 @@ export function EditTransactionModal({
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกบัญชี" />
+              <SelectValue placeholder="Select Account" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(accounts) &&
@@ -181,7 +182,7 @@ export function EditTransactionModal({
           </Select>
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>

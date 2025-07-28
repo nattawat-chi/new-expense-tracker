@@ -20,7 +20,7 @@ export function BudgetSection({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">งบประมาณ</h2>
+        <h2 className="text-2xl font-bold">Budget</h2>
       </div>
       <div>
         {budgets.map((budget: any) => (

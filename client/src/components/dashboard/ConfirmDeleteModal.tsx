@@ -1,3 +1,4 @@
+"use client";
 import {
   Button,
   Dialog,
@@ -24,15 +25,15 @@ export function ConfirmDeleteModal({
     >
       <DialogContent className="max-w-sm w-full">
         <DialogHeader>
-          <DialogTitle>ยืนยันการลบ</DialogTitle>
+          <DialogTitle>Confirm Delete</DialogTitle>
         </DialogHeader>
-        <div className="mb-4">คุณต้องการลบรายการนี้จริงหรือไม่?</div>
+        <div className="mb-4">Are you sure you want to delete this item?</div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel}>
-            ยกเลิก
+            Cancel
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            ลบ
+            Delete
           </Button>
         </div>
       </DialogContent>

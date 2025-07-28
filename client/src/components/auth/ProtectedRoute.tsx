@@ -55,9 +55,7 @@ export default function ProtectedRoute({
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">
-              กำลังตรวจสอบการเข้าสู่ระบบ...
-            </p>
+            <p className="text-muted-foreground">Checking authentication...</p>
           </div>
         </div>
       )
@@ -70,7 +68,7 @@ export default function ProtectedRoute({
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">กำลังเปลี่ยนเส้นทาง...</p>
+          <p className="text-muted-foreground">Changing route...</p>
         </div>
       </div>
     );

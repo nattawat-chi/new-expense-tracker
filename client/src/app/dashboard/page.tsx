@@ -2,40 +2,23 @@
 import { useUser, useAuth } from "@clerk/nextjs";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
-import { Search } from "lucide-react";
 import { useGlobalStore, GlobalStoreState } from "@/lib/store";
-import {
-  createCategory,
-  deleteCategory,
-  deleteTransaction,
-  updateCategory,
-  exportTransactions,
-} from "@/lib/api";
+import { deleteTransaction, exportTransactions } from "@/lib/api";
 import React from "react";
-// import { AddCategoryModal } from "@/components/dashboard/AddCategoryModal";
 import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
-import { AddBudgetModal } from "@/components/dashboard/AddBudgetModal";
-import { AddAccountModal } from "@/components/dashboard/AddAccountModal";
 import { EditTransactionModal } from "@/components/dashboard/EditTransactionModal";
 import { ConfirmDeleteModal } from "@/components/dashboard/ConfirmDeleteModal";
-import type {
-  Transaction,
-  Pagination,
-  MonthlyReport,
-} from "@/components/dashboard/types";
-import { DashboardFilterBar } from "@/components/dashboard/DashboardFilterBar";
+import type { Transaction, Pagination } from "@/components/dashboard/types";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import { BudgetAlertsSection } from "@/components/dashboard/BudgetAlertsSection";
 import { useDashboardFilters } from "./hooks";
 import { formatDate } from "@/lib/utils";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { BudgetSection } from "@/components/dashboard/BudgetSection";
-import { TransactionSection } from "@/components/dashboard/TransactionSection";
-import { ExportButton } from "@/components/dashboard/ExportButton";
-import CategoryManagementModal from "@/components/dashboard/AddCategoryModal";
+import { TransactionTable } from "@/components/dashboard/TransactionTable";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toast";
 import { ProtectedRoute, ErrorBoundary } from "@/components/auth";
+import toast from "react-hot-toast";
 
 const COLORS = [
   "#0088FE",
@@ -52,12 +35,8 @@ export default function EnhancedDashboard() {
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
   const [filters, setFilters] = useDashboardFilters();
-  const [currentPage, setCurrentPage] = useState(1);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
-
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [categoryModalOpen, setCategoryModalOpen] = React.useState(false);
 
   // ป้องกัน fetch ซ้ำ
   const lastFetchParamsRef = useRef<string>("");
@@ -66,10 +45,10 @@ export default function EnhancedDashboard() {
   const transactionsParams = useMemo(
     () => ({
       ...filters,
-      page: currentPage,
-      limit: 10,
+      page: 1,
+      limit: 5, // แสดงแค่ 5 รายการล่าสุด
     }),
-    [filters, currentPage]
+    [filters]
   );
 
   const transactionStatsParams = useMemo(() => ({}), []);
@@ -86,9 +65,6 @@ export default function EnhancedDashboard() {
     accounts,
     accountsLoading: accLoading,
     fetchAccounts,
-    budgets,
-    budgetsLoading: budgetsLoading,
-    fetchBudgets,
     transactions,
     transactionsPagination: pagination,
     transactionsLoading,
@@ -96,9 +72,6 @@ export default function EnhancedDashboard() {
     stats,
     statsLoading,
     fetchStats,
-    alerts,
-    alertsLoading,
-    fetchAlerts,
     topCategories,
     topCategoriesLoading,
     fetchTopCategories,
@@ -120,7 +93,6 @@ export default function EnhancedDashboard() {
         await Promise.all([
           fetchCategories(accessToken),
           fetchAccounts(accessToken),
-          fetchBudgets(accessToken),
           fetchStats(accessToken, transactionStatsParams),
           fetchTopCategories(accessToken, topCategoriesParams),
           fetchMonthlyReport(accessToken, monthlyReportParams),
@@ -165,7 +137,7 @@ export default function EnhancedDashboard() {
     const freshParams = {
       ...filters,
       page: 1,
-      limit: 10,
+      limit: 5,
     };
 
     // Fetch transactions ใหม่ทันที
@@ -176,77 +148,14 @@ export default function EnhancedDashboard() {
 
     // อัปเดท accounts balance (ในกรณีที่ balance เปลี่ยน)
     await fetchAccounts(accessToken);
-
-    // ตั้ง currentPage เป็น 1 เพื่อให้ UI sync
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
   }, [
     filters,
-    currentPage,
     getToken,
     fetchTransactions,
     fetchStats,
     fetchAccounts,
     transactionStatsParams,
   ]);
-
-  // const handleCategoryAdded = useCallback(async () => {
-  //   const accessToken = await getToken();
-  //   if (!accessToken) return;
-  //   // เฉพาะ categories ที่ต้อง refetch
-  //   await fetchCategories(accessToken);
-  // }, [getToken, fetchCategories]);
-
-  const handleBudgetAdded = useCallback(async () => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    await fetchBudgets(accessToken);
-  }, [getToken, fetchBudgets]);
-
-  const handleAccountAdded = useCallback(async () => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    await fetchAccounts(accessToken);
-  }, [getToken, fetchAccounts]);
-
-  const handleAddCategory = async (form: { name: string; type: string }) => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    await createCategory(
-      { ...form, type: form.type.toUpperCase() },
-      accessToken
-    );
-    await fetchCategories(accessToken);
-  };
-
-  const handleEditCategory = async (
-    id: string,
-    form: { name: string; type: string }
-  ) => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    await updateCategory(
-      id,
-      { ...form, type: form.type.toUpperCase() },
-      accessToken
-    );
-    await fetchCategories(accessToken);
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    const accessToken = await getToken();
-    if (!accessToken) return;
-    await deleteCategory(id, accessToken);
-    await fetchCategories(accessToken);
-  };
-
-  // แปลงค่า categories ให้ตรงกับ modal
-  const normalizedCategories =
-    categories?.map((cat: any) => ({
-      ...cat,
-      type: cat.type?.toUpperCase() || "EXPENSE",
-    })) || [];
 
   // Calculate total balance
   const totalBalance = Array.isArray(accounts)
@@ -255,30 +164,6 @@ export default function EnhancedDashboard() {
         0
       )
     : 0;
-
-  const handleExport = async () => {
-    try {
-      const accessToken = await getToken();
-      if (!accessToken) return;
-
-      const blob = await exportTransactions(accessToken, {
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-        format: "csv",
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `transactions-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Export failed:", error);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     setDeleteTxId(id);
@@ -299,8 +184,11 @@ export default function EnhancedDashboard() {
         fetchStats(accessToken, transactionStatsParams),
         fetchAccounts(accessToken), // อัปเดท account balance
       ]);
+
+      toast.success("Transaction deleted successfully");
     } catch (error) {
       console.error("Delete failed:", error);
+      toast.error("Error deleting transaction");
       setDeleteTxId(null);
     }
   };
@@ -320,28 +208,29 @@ export default function EnhancedDashboard() {
   const barChartData =
     monthlyReport?.dailyBreakdown?.map(
       (day: { date: string; income: number; expense: number }) => ({
-        date: formatDate(day.date, "th-TH", { day: "numeric", month: "short" }),
-        รายรับ: day.income,
-        รายจ่าย: day.expense,
+        date: formatDate(day.date, "en-US", { day: "numeric", month: "short" }),
+        income: day.income,
+        expense: day.expense,
       })
     ) || [];
-
-  const budgetAlerts = alerts;
 
   return (
     <ErrorBoundary>
       <ProtectedRoute>
         <div className="min-h-screen flex bg-background mt-2">
+          <Toaster />
           <DashboardSidebar clerkUser={clerkUser} />
           <main className="flex-1 p-8 bg-background overflow-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <div>
                 <h1 className="text-3xl font-bold mb-1 text-foreground">
-                  สวัสดี,{" "}
-                  {clerkUser?.firstName || clerkUser?.fullName || "ผู้ใช้"}
+                  Hello,{" "}
+                  {clerkUser?.firstName?.toUpperCase() ||
+                    clerkUser?.fullName ||
+                    "User"}
                 </h1>
                 <p className="text-muted-foreground">
-                  ดูยอดเงินคงเหลือและสรุปการเงินของคุณ 👀
+                  See your balance and financial summary 👀
                 </p>
               </div>
               <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
@@ -351,82 +240,46 @@ export default function EnhancedDashboard() {
                   catLoading={catLoading}
                   refetchCategories={() => {}} // ไม่ต้อง refetch
                 />
-                <Button
-                  onClick={() => setCategoryModalOpen(true)}
-                  variant="secondary"
-                  className="flex items-center gap-2 w-full md:w-auto"
-                >
-                  จัดการหมวดหมู่
-                </Button>
-                {/* <AddCategoryModal
-              onAdded={handleCategoryAdded}
-              categories={categories}
-              catLoading={catLoading}
-              refetchCategories={() => {}} // ไม่ต้อง refetch
-            /> */}
-                <CategoryManagementModal
-                  open={categoryModalOpen}
-                  categories={normalizedCategories}
-                  onClose={() => setCategoryModalOpen(false)}
-                  onAddCategory={handleAddCategory}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                />
-                <AddBudgetModal onAdded={handleBudgetAdded} />
-                <AddAccountModal onAdded={handleAccountAdded} />
-                <ExportButton onExport={handleExport} />
               </div>
             </div>
 
-            <BudgetSection
-              budgets={budgets}
+            {/* ยอดเงินคงเหลือและรายรับ-รายจ่ายเดือนนี้ */}
+            <SummaryCards
               totalBalance={totalBalance}
               incomeTotal={incomeTotal}
               expenseTotal={expenseTotal}
-              pieChartData={pieChartData}
-              barChartData={barChartData}
             />
-            {/* <SummaryCards
-          totalBalance={totalBalance}
-          incomeTotal={incomeTotal}
-          expenseTotal={expenseTotal}
-        />
-        <DashboardCharts
-          pieChartData={pieChartData}
-          barChartData={barChartData}
-        /> */}
+
+            {/* Charts แสดงสถิติ */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5" />
-                  ค้นหาและกรองรายการ
-                </CardTitle>
+                <CardTitle>Financial Statistics</CardTitle>
               </CardHeader>
               <CardContent>
-                <DashboardFilterBar
-                  filters={filters}
-                  setFilters={setFilters}
-                  categories={normalizedCategories}
+                <DashboardCharts
+                  pieChartData={pieChartData}
+                  barChartData={barChartData}
                 />
               </CardContent>
             </Card>
 
-            <BudgetAlertsSection budgetAlerts={budgetAlerts} />
-
+            {/* รายการล่าสุด 5 อันดับ */}
             <Card>
               <CardHeader>
-                <CardTitle>รายการล่าสุด</CardTitle>
+                <CardTitle>Latest 5 Transactions</CardTitle>
               </CardHeader>
               <CardContent>
-                {pagination ? (
-                  <TransactionSection
+                {transactions && transactions.length > 0 ? (
+                  <TransactionTable
                     transactions={transactions as Transaction[]}
-                    pagination={pagination}
                     onEdit={setEditingTransaction}
                     onDelete={handleDelete}
-                    setCurrentPage={setCurrentPage}
                   />
-                ) : null}
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No latest transactions
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -443,8 +296,10 @@ export default function EnhancedDashboard() {
                   await Promise.all([
                     fetchTransactions(accessToken, transactionsParams),
                     fetchStats(accessToken, transactionStatsParams),
-                    fetchAccounts(accessToken), // อัปเดท account balance
+                    fetchAccounts(accessToken),
                   ]);
+
+                  toast.success("Transaction updated successfully");
                 }}
               />
             )}

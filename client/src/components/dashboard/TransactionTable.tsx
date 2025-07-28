@@ -1,3 +1,4 @@
+"use client";
 import {
   Badge,
   Button,
@@ -24,13 +25,13 @@ export function TransactionTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>วันที่</TableHead>
-          <TableHead>ประเภท</TableHead>
-          <TableHead>หมวดหมู่</TableHead>
-          <TableHead>คำอธิบาย</TableHead>
-          <TableHead>จำนวนเงิน</TableHead>
-          <TableHead>บัญชี</TableHead>
-          <TableHead>การดำเนินการ</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Category</TableHead>
+          <TableHead>Description</TableHead>
+          <TableHead>Amount</TableHead>
+          <TableHead>Account</TableHead>
+          <TableHead>Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -41,7 +42,7 @@ export function TransactionTable({
             </TableCell>
             <TableCell>
               <Badge variant={tx.type === "INCOME" ? "success" : "destructive"}>
-                {tx.type === "INCOME" ? "รายรับ" : "รายจ่าย"}
+                {tx.type === "INCOME" ? "Income" : "Expense"}
               </Badge>
             </TableCell>
             <TableCell>{tx.category.name}</TableCell>

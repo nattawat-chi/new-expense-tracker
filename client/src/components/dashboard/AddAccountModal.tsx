@@ -52,22 +52,22 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="secondary"
+          variant="outline"
           className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
         >
-          + เพิ่มบัญชีธนาคาร
+          + Add Bank Account
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>เพิ่มบัญชีธนาคาร</DialogTitle>
+          <DialogTitle>Add Bank Account</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             setError(null);
             if (!form.name || !form.balance) {
-              setError("กรุณากรอกชื่อบัญชีและยอดเงินเริ่มต้น");
+              setError("Please fill in the account name and initial balance");
               return;
             }
             setLoading(true);
@@ -105,7 +105,7 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกธนาคาร" />
+              <SelectValue placeholder="Select Bank" />
             </SelectTrigger>
             <SelectContent>
               {bankList.map((bank) => (
@@ -121,7 +121,7 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="ชื่อบัญชี/ธนาคาร (กำหนดเอง)"
+              placeholder="Account Name/Bank (Custom)"
               required
             />
           )}
@@ -131,7 +131,7 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
               name="name"
               value={form.name}
               onChange={handleChange}
-              placeholder="ชื่อบัญชี/ธนาคาร"
+              placeholder="Account Name/Bank"
               required
             />
           )}
@@ -139,7 +139,7 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
             name="balance"
             value={form.balance}
             onChange={handleChange}
-            placeholder="ยอดเงินเริ่มต้น"
+            placeholder="Initial Balance"
             required
             type="number"
             min="0"
@@ -147,7 +147,7 @@ export function AddAccountModal({ onAdded }: { onAdded?: () => void }) {
           />
           {error && <div className="text-red-500 text-sm">{error}</div>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>

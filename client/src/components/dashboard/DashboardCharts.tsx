@@ -26,7 +26,7 @@ export function DashboardCharts({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PieChartIcon className="h-5 w-5" />
-            สัดส่วนรายจ่ายตามหมวดหมู่
+            Category Expense Ratio
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -60,7 +60,7 @@ export function DashboardCharts({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            รายรับ-รายจ่ายรายวัน
+            Daily Income vs Expense
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -70,8 +70,8 @@ export function DashboardCharts({
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="รายรับ" fill="#10B981" />
-                <Bar dataKey="รายจ่าย" fill="#EF4444" />
+                <Bar dataKey="income" fill="#10B981" />
+                <Bar dataKey="expense" fill="#EF4444" />
               </BarChart>
             </ResponsiveContainer>
           </div>

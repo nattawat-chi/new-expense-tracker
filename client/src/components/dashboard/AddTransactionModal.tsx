@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -66,19 +67,19 @@ export function AddTransactionModal({
           variant="secondary"
           className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
         >
-          + เพิ่มรายการ
+          + Add Transaction
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>เพิ่มรายการใหม่</DialogTitle>
+          <DialogTitle>Add New Transaction</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             setError(null);
             if (!form.amount || !form.categoryId || !form.accountId) {
-              setError("กรุณากรอกจำนวนเงิน เลือกหมวดหมู่ และบัญชีให้ครบถ้วน");
+              setError("Please fill in the amount, category and account");
               return;
             }
 
@@ -86,7 +87,7 @@ export function AddTransactionModal({
             try {
               const accessToken = await getToken();
               if (!accessToken) {
-                setError("ไม่สามารถรับ access token ได้");
+                setError("Cannot get access token");
                 return;
               }
 
@@ -123,11 +124,11 @@ export function AddTransactionModal({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกประเภท" />
+              <SelectValue placeholder="Select Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="EXPENSE">รายจ่าย</SelectItem>
-              <SelectItem value="INCOME">รายรับ</SelectItem>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
             </SelectContent>
           </Select>
 
@@ -135,7 +136,7 @@ export function AddTransactionModal({
             name="amount"
             value={form.amount}
             onChange={handleChange}
-            placeholder="จำนวนเงิน"
+            placeholder="Amount"
             required
             type="number"
             min="0"
@@ -146,14 +147,14 @@ export function AddTransactionModal({
             name="description"
             value={form.description}
             onChange={handleChange}
-            placeholder="คำอธิบาย"
+            placeholder="Description"
           />
 
           <Input
             name="date"
             value={form.date}
             onChange={handleChange}
-            placeholder="วันที่"
+            placeholder="Date"
             type="date"
             required
           />
@@ -167,7 +168,7 @@ export function AddTransactionModal({
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกหมวดหมู่" />
+              <SelectValue placeholder="Select Category" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(categories) &&
@@ -191,7 +192,7 @@ export function AddTransactionModal({
             required
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกบัญชี" />
+              <SelectValue placeholder="Select Account" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(accounts) &&
@@ -206,7 +207,7 @@ export function AddTransactionModal({
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>

@@ -1,3 +1,4 @@
+"use client";
 // import { useState } from "react";
 // import { useAuth } from "@clerk/nextjs";
 // import {
@@ -124,6 +125,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 interface CategoryForm {
   name: string;
@@ -180,8 +182,9 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
       }
       setForm({ name: "", type: activeTab });
       setShowAddForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving category:", error);
+      // The error handling is now done in the parent component with toast notifications
     }
   };
 
@@ -204,9 +207,27 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
 
   const handleConfirmDelete = async () => {
     if (deleteId) {
-      await onDeleteCategory(deleteId);
-      setShowDeleteConfirm(false);
-      setDeleteId(null);
+      try {
+        await onDeleteCategory(deleteId);
+        setShowDeleteConfirm(false);
+        setDeleteId(null);
+        toast.success("Category deleted successfully");
+      } catch (error: any) {
+        console.error("Error deleting category:", error);
+
+        // Check if the error is about transactions
+        if (error?.response?.data?.error?.includes("transactions")) {
+          toast.error(
+            "Cannot delete category because it has transactions associated with it. Please delete or move the transactions first.",
+            { duration: 6000 }
+          );
+        } else {
+          toast.error("Error deleting category");
+        }
+
+        setShowDeleteConfirm(false);
+        setDeleteId(null);
+      }
     }
   };
 
@@ -259,7 +280,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                     required
                   />
                 </div>
-                <div>
+                {/* <div>
                   <Label className="mb-2 block">Type</Label>
                   <Select
                     value={form.type}
@@ -275,7 +296,7 @@ const CategoryManagementModal: React.FC<CategoryManagementModalProps> = ({
                       <SelectItem value="INCOME">Income</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
               </div>
               <div className="flex gap-2 mt-4">
                 <Button type="submit">

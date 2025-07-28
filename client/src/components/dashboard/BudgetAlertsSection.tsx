@@ -14,7 +14,7 @@ export function BudgetAlertsSection({ budgetAlerts }: { budgetAlerts: any[] }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-red-800">
           <AlertTriangle className="h-5 w-5" />
-          แจ้งเตือนงบประมาณ
+          Budget Alerts
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -26,7 +26,7 @@ export function BudgetAlertsSection({ budgetAlerts }: { budgetAlerts: any[] }) {
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold">
-                  {alert.budget.category?.name || "งบประมาณรวม"}
+                  {alert.budget.category?.name || "Total Budget"}
                 </span>
                 <Badge
                   variant={
@@ -35,11 +35,13 @@ export function BudgetAlertsSection({ budgetAlerts }: { budgetAlerts: any[] }) {
                       : "warning"
                   }
                 >
-                  {alert.alertType === "OVER_BUDGET" ? "เกินงบ" : "ใกล้หมด"}
+                  {alert.alertType === "OVER_BUDGET"
+                    ? "Over Budget"
+                    : "Close to End"}
                 </Badge>
               </div>
               <div className="text-sm text-gray-600">
-                ใช้ไปแล้ว {alert.percentageUsed.toFixed(1)}% ของงบประมาณ
+                Used {alert.percentageUsed.toFixed(1)}% of the budget
               </div>
             </div>
           ))}

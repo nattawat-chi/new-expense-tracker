@@ -1,3 +1,4 @@
+"use client";
 import {
   Input,
   Select,
@@ -20,7 +21,7 @@ export function DashboardFilterBar({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <Input
-        placeholder="ค้นหาจากคำอธิบาย..."
+        placeholder="Search by description..."
         value={filters.search}
         onChange={(e) => setFilters({ ...filters, search: e.target.value })}
       />
@@ -34,10 +35,10 @@ export function DashboardFilterBar({
         }
       >
         <SelectTrigger>
-          <SelectValue placeholder="เลือกหมวดหมู่" />
+          <SelectValue placeholder="Select Category" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">ทุกหมวดหมู่</SelectItem>
+          <SelectItem value="ALL">All Categories</SelectItem>
           {categories.map((cat: any) => (
             <SelectItem key={cat.id} value={cat.id}>
               {cat.name}
@@ -52,25 +53,25 @@ export function DashboardFilterBar({
         }
       >
         <SelectTrigger>
-          <SelectValue placeholder="เลือกประเภท" />
+          <SelectValue placeholder="Select Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">ทุกประเภท</SelectItem>
-          <SelectItem value="INCOME">รายรับ</SelectItem>
-          <SelectItem value="EXPENSE">รายจ่าย</SelectItem>
+          <SelectItem value="ALL">All Types</SelectItem>
+          <SelectItem value="INCOME">Income</SelectItem>
+          <SelectItem value="EXPENSE">Expense</SelectItem>
         </SelectContent>
       </Select>
       <Input
         type="date"
         value={filters.startDate}
         onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-        placeholder="วันที่เริ่มต้น"
+        placeholder="Start Date"
       />
       <Input
         type="date"
         value={filters.endDate}
         onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-        placeholder="วันที่สิ้นสุด"
+        placeholder="End Date"
       />
       <Button
         variant="outline"
@@ -85,7 +86,7 @@ export function DashboardFilterBar({
           });
         }}
       >
-        ล้างตัวกรอง
+        Clear Filters
       </Button>
     </div>
   );

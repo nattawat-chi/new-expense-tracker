@@ -41,12 +41,12 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
           variant="secondary"
           className="flex items-center gap-2 w-full md:w-auto cursor-pointer"
         >
-          + ตั้งงบประมาณ
+          + Set Budget
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md w-full">
         <DialogHeader>
-          <DialogTitle>ตั้งงบประมาณใหม่</DialogTitle>
+          <DialogTitle>Set New Budget</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={async (e) => {
@@ -85,7 +85,7 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
             name="amount"
             value={form.amount}
             onChange={handleChange}
-            placeholder="จำนวนเงิน"
+            placeholder="Amount"
             required
             type="number"
             min="0"
@@ -95,7 +95,7 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
             name="startDate"
             value={form.startDate}
             onChange={handleChange}
-            placeholder="วันที่เริ่มต้น"
+            placeholder="Start Date"
             type="date"
             required
           />
@@ -103,7 +103,7 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
             name="endDate"
             value={form.endDate}
             onChange={handleChange}
-            placeholder="วันที่สิ้นสุด"
+            placeholder="End Date"
             type="date"
             required
           />
@@ -116,7 +116,7 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
             disabled={catLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="เลือกหมวดหมู่ (ไม่บังคับ)" />
+              <SelectValue placeholder="Select Category (Optional)" />
             </SelectTrigger>
             <SelectContent>
               {Array.isArray(categories) &&
@@ -130,7 +130,7 @@ export function AddBudgetModal({ onAdded }: { onAdded?: () => void }) {
             </SelectContent>
           </Select>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "Saving..." : "Save"}
           </Button>
         </form>
       </DialogContent>

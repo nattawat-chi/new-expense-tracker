@@ -17,17 +17,17 @@ export function BudgetCard({ budget }: { budget: any }) {
     <Card className="flex flex-col w-1/3 h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>{budget.category?.name || "งบประมาณรวม"}</span>
+          <span>{budget.category?.name || "Total Budget"}</span>
           {isOverBudget && (
             <Badge variant="destructive">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              เกินงบ
+              Over Budget
             </Badge>
           )}
           {isNearLimit && !isOverBudget && (
             <Badge variant="warning">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              ใกล้หมด
+              Close to End
             </Badge>
           )}
         </CardTitle>
@@ -35,19 +35,19 @@ export function BudgetCard({ budget }: { budget: any }) {
       <CardContent>
         <div className="space-y-4">
           <div className="flex justify-between text-sm">
-            <span>งบประมาณ:</span>
+            <span>Budget:</span>
             <span className="font-semibold">
               ฿{Number(budget.amount).toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>ใช้ไปแล้ว:</span>
+            <span>Used:</span>
             <span className="font-semibold">
               ฿{Number(budget.spent).toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>เหลือ:</span>
+            <span>Remaining:</span>
             <span
               className={`font-semibold ${
                 Number(budget.remaining) < 0 ? "text-red-600" : "text-green-600"
@@ -58,7 +58,7 @@ export function BudgetCard({ budget }: { budget: any }) {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>เปอร์เซ็นต์ที่ใช้:</span>
+              <span>Percentage Used:</span>
               <span className="font-semibold">
                 {Number(percentageUsed).toFixed(1)}%
               </span>
@@ -69,8 +69,8 @@ export function BudgetCard({ budget }: { budget: any }) {
             />
           </div>
           <div className="text-xs text-muted-foreground">
-            {new Date(budget.startDate).toLocaleDateString("th-TH")} -{" "}
-            {new Date(budget.endDate).toLocaleDateString("th-TH")}
+            {new Date(budget.startDate).toLocaleDateString("en-US")} -{" "}
+            {new Date(budget.endDate).toLocaleDateString("en-US")}
           </div>
         </div>
       </CardContent>

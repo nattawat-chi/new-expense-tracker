@@ -140,18 +140,18 @@ export default function ReportsPage() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
   const months = [
-    "มกราคม",
-    "กุมภาพันธ์",
-    "มีนาคม",
-    "เมษายน",
-    "พฤษภาคม",
-    "มิถุนายน",
-    "กรกฎาคม",
-    "สิงหาคม",
-    "กันยายน",
-    "ตุลาคม",
-    "พฤศจิกายน",
-    "ธันวาคม",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const fetchMonthlyReport = async () => {
@@ -234,7 +234,7 @@ export default function ReportsPage() {
 
             const processed = {
               categoryId: cat.categoryId || "",
-              categoryName: cat.categoryName || "ไม่ระบุ",
+              categoryName: cat.categoryName || "Unspecified",
               type: cat.type || "EXPENSE",
               totalAmount: totalAmount,
               count: Number(cat.count) || 0,
@@ -275,8 +275,8 @@ export default function ReportsPage() {
     if (!monthlyReport?.dailyBreakdown) return [];
     return monthlyReport.dailyBreakdown.map((day) => ({
       date: formatDate(day.date, "th-TH", { day: "numeric", month: "short" }),
-      รายรับ: day.income,
-      รายจ่าย: day.expense,
+      income: day.income,
+      expense: day.expense,
     }));
   }, [monthlyReport]);
 
@@ -294,10 +294,10 @@ export default function ReportsPage() {
   const yearlyChartData = useMemo(() => {
     if (!yearlyReport?.monthlyBreakdown) return [];
     return yearlyReport.monthlyBreakdown.map((month) => ({
-      เดือน: month.monthName,
-      รายรับ: Number(month.income),
-      รายจ่าย: Number(month.expense),
-      ยอดสุทธิ: Number(month.net),
+      month: month.monthName,
+      income: Number(month.income),
+      expense: Number(month.expense),
+      net: Number(month.net),
     }));
   }, [yearlyReport]);
 
@@ -319,7 +319,7 @@ export default function ReportsPage() {
       .filter((cat) => cat.type === "EXPENSE")
       .slice(0, 10)
       .map((cat, index) => ({
-        name: cat.categoryName || "ไม่ระบุ",
+        name: cat.categoryName || "Unspecified",
         value: cat.totalAmount || 0,
         color: COLORS[index % COLORS.length],
       }));
@@ -331,10 +331,10 @@ export default function ReportsPage() {
       .filter((cat) => cat.type === "EXPENSE")
       .slice(0, 8)
       .map((cat) => ({
-        หมวดหมู่: cat.categoryName || "ไม่ระบุ",
-        ยอดรวม: cat.totalAmount || 0,
-        รายการ: cat.count || 0,
-        เฉลี่ยต่อเดือน: cat.monthlyAverage || 0,
+        category: cat.categoryName || "Unspecified",
+        total: cat.totalAmount || 0,
+        count: cat.count || 0,
+        monthlyAverage: cat.monthlyAverage || 0,
       }));
   }, [categoryReport]);
 
@@ -381,10 +381,10 @@ export default function ReportsPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <div>
                 <h1 className="text-3xl font-bold mb-1 text-foreground">
-                  รายงานและวิเคราะห์
+                  Reports and Analysis
                 </h1>
                 <p className="text-muted-foreground">
-                  ดูสถิติและแนวโน้มการเงินของคุณ 📊
+                  See your financial statistics and trends 📊
                 </p>
               </div>
             </div>
@@ -400,18 +400,18 @@ export default function ReportsPage() {
                   className="flex items-center gap-2"
                 >
                   <Calendar className="h-4 w-4" />
-                  รายเดือน
+                  Monthly
                 </TabsTrigger>
                 <TabsTrigger value="yearly" className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  รายปี
+                  Yearly
                 </TabsTrigger>
                 <TabsTrigger
                   value="category"
                   className="flex items-center gap-2"
                 >
                   <PieChartIcon className="h-4 w-4" />
-                  ตามหมวดหมู่
+                  By Category
                 </TabsTrigger>
               </TabsList>
 
@@ -453,13 +453,13 @@ export default function ReportsPage() {
                     className="flex items-center gap-2"
                   >
                     <Download className="h-4 w-4" />
-                    ส่งออก
+                    Export
                   </Button>
                 </div>
 
                 {loading ? (
                   <div className="flex items-center justify-center h-64">
-                    <div className="text-muted-foreground">กำลังโหลด...</div>
+                    <div className="text-muted-foreground">Loading...</div>
                   </div>
                 ) : monthlyReport ? (
                   <>
@@ -468,7 +468,7 @@ export default function ReportsPage() {
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            รายรับรวม
+                            Total Income
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -478,14 +478,14 @@ export default function ReportsPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {monthlyReport.summary.income.count} รายการ
+                            {monthlyReport.summary.income.count} transactions
                           </p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            รายจ่ายรวม
+                            Total Expense
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -495,14 +495,14 @@ export default function ReportsPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {monthlyReport.summary.expense.count} รายการ
+                            {monthlyReport.summary.expense.count} transactions
                           </p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            ยอดสุทธิ
+                            Net
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -516,7 +516,7 @@ export default function ReportsPage() {
                             {formatCurrency(monthlyReport.summary.net)}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            รายรับ - รายจ่าย
+                            Income - Expense
                           </p>
                         </CardContent>
                       </Card>
@@ -526,7 +526,7 @@ export default function ReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <Card>
                         <CardHeader>
-                          <CardTitle>รายรับ-รายจ่ายรายวัน</CardTitle>
+                          <CardTitle>Daily Income vs Expense</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
@@ -540,8 +540,8 @@ export default function ReportsPage() {
                                 }
                               />
                               <Legend />
-                              <Bar dataKey="รายรับ" fill="#10B981" />
-                              <Bar dataKey="รายจ่าย" fill="#EF4444" />
+                              <Bar dataKey="income" fill="#10B981" />
+                              <Bar dataKey="expense" fill="#EF4444" />
                             </BarChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -549,7 +549,7 @@ export default function ReportsPage() {
 
                       <Card>
                         <CardHeader>
-                          <CardTitle>การใช้จ่ายตามหมวดหมู่</CardTitle>
+                          <CardTitle>Spending by Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
@@ -586,7 +586,7 @@ export default function ReportsPage() {
                   </>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
-                    ไม่มีข้อมูลรายงาน
+                    No report data
                   </div>
                 )}
               </TabsContent>
@@ -614,13 +614,13 @@ export default function ReportsPage() {
                     className="flex items-center gap-2"
                   >
                     <Download className="h-4 w-4" />
-                    ส่งออก
+                    Export
                   </Button>
                 </div>
 
                 {loading ? (
                   <div className="flex items-center justify-center h-64">
-                    <div className="text-muted-foreground">กำลังโหลด...</div>
+                    <div className="text-muted-foreground">Loading...</div>
                   </div>
                 ) : yearlyReport ? (
                   <>
@@ -629,7 +629,7 @@ export default function ReportsPage() {
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            รายรับรวมปี
+                            Total Income
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -639,14 +639,14 @@ export default function ReportsPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {yearlyReport.summary.income.count} รายการ
+                            {yearlyReport.summary.income.count} transactions
                           </p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            รายจ่ายรวมปี
+                            Total Expense
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -656,14 +656,14 @@ export default function ReportsPage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {yearlyReport.summary.expense.count} รายการ
+                            {yearlyReport.summary.expense.count} transactions
                           </p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            ยอดสุทธิปี
+                            Net
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -677,7 +677,7 @@ export default function ReportsPage() {
                             {formatCurrency(yearlyReport.summary.net)}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            รายรับ - รายจ่าย
+                            Income - Expense
                           </p>
                         </CardContent>
                       </Card>
@@ -687,13 +687,13 @@ export default function ReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <Card>
                         <CardHeader>
-                          <CardTitle>รายรับ-รายจ่ายรายเดือน</CardTitle>
+                          <CardTitle>Monthly Income vs Expense</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={yearlyChartData}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="เดือน" />
+                              <XAxis dataKey="month" />
                               <YAxis />
                               <Tooltip
                                 formatter={(value) =>
@@ -701,8 +701,8 @@ export default function ReportsPage() {
                                 }
                               />
                               <Legend />
-                              <Bar dataKey="รายรับ" fill="#10B981" />
-                              <Bar dataKey="รายจ่าย" fill="#EF4444" />
+                              <Bar dataKey="income" fill="#10B981" />
+                              <Bar dataKey="expense" fill="#EF4444" />
                             </BarChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -710,7 +710,7 @@ export default function ReportsPage() {
 
                       <Card>
                         <CardHeader>
-                          <CardTitle>หมวดหมู่ที่ใช้จ่ายมากที่สุด</CardTitle>
+                          <CardTitle>Spending by Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
@@ -748,13 +748,13 @@ export default function ReportsPage() {
                     {/* Monthly Trend Line Chart */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>แนวโน้มยอดสุทธิรายเดือน</CardTitle>
+                        <CardTitle>Monthly Net Trend</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
                           <LineChart data={yearlyChartData}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="เดือน" />
+                            <XAxis dataKey="month" />
                             <YAxis />
                             <Tooltip
                               formatter={(value) =>
@@ -764,7 +764,7 @@ export default function ReportsPage() {
                             <Legend />
                             <Line
                               type="monotone"
-                              dataKey="ยอดสุทธิ"
+                              dataKey="net"
                               stroke="#3B82F6"
                               strokeWidth={2}
                             />
@@ -775,7 +775,7 @@ export default function ReportsPage() {
                   </>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
-                    ไม่มีข้อมูลรายงาน
+                    No report data
                   </div>
                 )}
               </TabsContent>
@@ -803,13 +803,13 @@ export default function ReportsPage() {
                     className="flex items-center gap-2"
                   >
                     <Download className="h-4 w-4" />
-                    ส่งออก
+                    Export
                   </Button>
                 </div>
 
                 {loading ? (
                   <div className="flex items-center justify-center h-64">
-                    <div className="text-muted-foreground">กำลังโหลด...</div>
+                    <div className="text-muted-foreground">Loading...</div>
                   </div>
                 ) : categoryReport.length > 0 ? (
                   <>
@@ -818,7 +818,7 @@ export default function ReportsPage() {
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            หมวดหมู่ทั้งหมด
+                            Total Categories
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -826,14 +826,14 @@ export default function ReportsPage() {
                             {categoryReport.length}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            หมวดหมู่ที่มีรายการ
+                            Categories with transactions
                           </p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            ยอดใช้จ่ายรวม
+                            Total Expense
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -847,15 +847,13 @@ export default function ReportsPage() {
                                 )
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            ทั้งหมด
-                          </p>
+                          <p className="text-xs text-muted-foreground">All</p>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            รายการรวม
+                            Total Transactions
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -865,9 +863,7 @@ export default function ReportsPage() {
                               0
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            รายการทั้งหมด
-                          </p>
+                          <p className="text-xs text-muted-foreground">All</p>
                         </CardContent>
                       </Card>
                     </div>
@@ -876,7 +872,7 @@ export default function ReportsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <Card>
                         <CardHeader>
-                          <CardTitle>สัดส่วนการใช้จ่ายตามหมวดหมู่</CardTitle>
+                          <CardTitle>Spending by Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
@@ -912,13 +908,13 @@ export default function ReportsPage() {
 
                       <Card>
                         <CardHeader>
-                          <CardTitle>ยอดใช้จ่ายตามหมวดหมู่</CardTitle>
+                          <CardTitle>Spending by Category</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={categoryBarData}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="หมวดหมู่" />
+                              <XAxis dataKey="category" />
                               <YAxis />
                               <Tooltip
                                 formatter={(value) =>
@@ -926,7 +922,7 @@ export default function ReportsPage() {
                                 }
                               />
                               <Legend />
-                              <Bar dataKey="ยอดรวม" fill="#EF4444" />
+                              <Bar dataKey="total" fill="#EF4444" />
                             </BarChart>
                           </ResponsiveContainer>
                         </CardContent>
@@ -936,20 +932,22 @@ export default function ReportsPage() {
                     {/* Category Table */}
                     <Card>
                       <CardHeader>
-                        <CardTitle>รายละเอียดหมวดหมู่</CardTitle>
+                        <CardTitle>Category Details</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="overflow-x-auto">
                           <table className="w-full">
                             <thead>
                               <tr className="border-b">
-                                <th className="text-left py-2">หมวดหมู่</th>
-                                <th className="text-right py-2">ยอดรวม</th>
-                                <th className="text-right py-2">รายการ</th>
+                                <th className="text-left py-2">Category</th>
+                                <th className="text-right py-2">Total</th>
                                 <th className="text-right py-2">
-                                  เฉลี่ยต่อเดือน
+                                  Transactions
                                 </th>
-                                <th className="text-right py-2">สัดส่วน</th>
+                                <th className="text-right py-2">
+                                  Monthly Average
+                                </th>
+                                <th className="text-right py-2">Percentage</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -962,7 +960,7 @@ export default function ReportsPage() {
                                     className="border-b"
                                   >
                                     <td className="py-2">
-                                      {cat.categoryName || "ไม่ระบุ"}
+                                      {cat.categoryName || "Unspecified"}
                                     </td>
                                     <td className="text-right py-2">
                                       {formatCurrency(cat.totalAmount || 0)}
@@ -986,7 +984,7 @@ export default function ReportsPage() {
                   </>
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
-                    ไม่มีข้อมูลรายงานหมวดหมู่
+                    No category report data
                   </div>
                 )}
               </TabsContent>

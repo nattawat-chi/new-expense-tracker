@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
+import binderLogo from "../../public/binderLogo.png";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] dark:from-[#18181b] dark:to-[#27272a] flex flex-col items-center">
       <header className="w-full max-w-5xl mx-auto flex justify-between items-center py-8 px-4">
-        <div className="text-2xl font-bold tracking-tight text-primary">
-          Binder
-        </div>
+        <a href="/">
+          <Image src={binderLogo} alt="Binder Logo" width={150} height={150} />
+        </a>
         <div>
           <SignedOut>
             <Link href="/login">
