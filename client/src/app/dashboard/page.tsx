@@ -14,7 +14,7 @@ import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { useDashboardFilters } from "./hooks";
 import { formatDate } from "@/lib/utils";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { TransactionTable } from "@/components/dashboard/TransactionTable";
+import { TransactionTableWrapper } from "@/components/dashboard/TransactionTableWrapper";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toast";
 import { ProtectedRoute, ErrorBoundary } from "@/components/auth";
@@ -270,7 +270,7 @@ export default function EnhancedDashboard() {
               </CardHeader>
               <CardContent>
                 {transactions && transactions.length > 0 ? (
-                  <TransactionTable
+                  <TransactionTableWrapper
                     transactions={transactions as Transaction[]}
                     onEdit={setEditingTransaction}
                     onDelete={handleDelete}

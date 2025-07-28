@@ -1,7 +1,7 @@
 "use client";
+
 import {
   Badge,
-  Button,
   Table,
   TableHeader,
   TableRow,
@@ -9,8 +9,8 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui";
-import { Edit, Trash2 } from "lucide-react";
 import type { Transaction } from "./types";
+import { ActionButtons } from "./ActionButtons";
 
 export function TransactionTable({
   transactions,
@@ -57,18 +57,11 @@ export function TransactionTable({
             </TableCell>
             <TableCell>{tx.account.name}</TableCell>
             <TableCell>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => onEdit(tx)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDelete(tx.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <ActionButtons
+                transaction={tx}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             </TableCell>
           </TableRow>
         ))}
