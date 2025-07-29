@@ -3,7 +3,12 @@ import { useUser, useAuth } from "@clerk/nextjs";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 import { useGlobalStore, GlobalStoreState } from "@/lib/store";
-import { deleteTransaction, exportTransactions } from "@/lib/api";
+import {
+  createCategory,
+  deleteCategory,
+  deleteTransaction,
+  updateCategory,
+} from "@/lib/api";
 import React from "react";
 import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
 import { EditTransactionModal } from "@/components/dashboard/EditTransactionModal";
@@ -19,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toast";
 import { ProtectedRoute, ErrorBoundary } from "@/components/auth";
 import toast from "react-hot-toast";
+import CategoryManagementModal from "@/components/dashboard/AddCategoryModal";
+import { Plus } from "lucide-react";
 
 const COLORS = [
   "#0088FE",
@@ -32,6 +39,8 @@ const COLORS = [
 ];
 
 export default function EnhancedDashboard() {
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
   const [filters, setFilters] = useDashboardFilters();
@@ -41,7 +50,6 @@ export default function EnhancedDashboard() {
   // ป้องกัน fetch ซ้ำ
   const lastFetchParamsRef = useRef<string>("");
   const isInitialLoadRef = useRef(true);
-
   const transactionsParams = useMemo(
     () => ({
       ...filters,
@@ -80,6 +88,12 @@ export default function EnhancedDashboard() {
     fetchMonthlyReport,
   } = useGlobalStore() as GlobalStoreState;
 
+  const normalizedCategories =
+    categories?.map((cat: any) => ({
+      ...cat,
+      type: cat.type?.toUpperCase() || "EXPENSE",
+    })) || [];
+
   // แยก initial data load ออกจาก transaction params
   useEffect(() => {
     let mounted = true;
@@ -109,12 +123,10 @@ export default function EnhancedDashboard() {
   // แยก transaction fetch ออกมา และใช้ debounce
   useEffect(() => {
     const paramsString = JSON.stringify(transactionsParams);
-
     // ถ้า params เหมือนเดิม ไม่ต้อง fetch
     if (lastFetchParamsRef.current === paramsString) {
       return;
     }
-
     const debounceTimeout = setTimeout(async () => {
       const accessToken = await getToken();
       if (!accessToken) return;
@@ -192,7 +204,56 @@ export default function EnhancedDashboard() {
       setDeleteTxId(null);
     }
   };
+  const handleAddCategory = async (form: { name: string; type: string }) => {
+    try {
+      const accessToken = await getToken();
+      if (!accessToken) return;
+      await createCategory(
+        { ...form, type: form.type.toUpperCase() },
+        accessToken
+      );
+      await fetchCategories(accessToken);
+      toast.success("Category added successfully");
+    } catch (error: any) {
+      console.error("Error adding category:", error);
+      toast.error("Error adding category");
+      throw error;
+    }
+  };
+  const handleEditCategory = async (
+    id: string,
+    form: { name: string; type: string }
+  ) => {
+    try {
+      const accessToken = await getToken();
+      if (!accessToken) return;
+      await updateCategory(
+        id,
+        { ...form, type: form.type.toUpperCase() },
+        accessToken
+      );
+      await fetchCategories(accessToken);
+      toast.success("Category updated successfully");
+    } catch (error: any) {
+      console.error("Error editing category:", error);
+      toast.error("Error updating category");
+      throw error;
+    }
+  };
 
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const accessToken = await getToken();
+      if (!accessToken) return;
+      await deleteCategory(id, accessToken);
+      await fetchCategories(accessToken);
+      toast.success("Category deleted successfully");
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      toast.error("Error deleting category");
+      throw error;
+    }
+  };
   const cancelDelete = () => setDeleteTxId(null);
 
   const incomeTotal = stats?.income?.total || 0;
@@ -239,6 +300,21 @@ export default function EnhancedDashboard() {
                   categories={categories}
                   catLoading={catLoading}
                   refetchCategories={() => {}} // ไม่ต้อง refetch
+                />
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                >
+                  Manage Categories
+                </Button>
+                <CategoryManagementModal
+                  open={isCategoryModalOpen}
+                  categories={normalizedCategories}
+                  onClose={() => setIsCategoryModalOpen(false)}
+                  onAddCategory={handleAddCategory}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
                 />
               </div>
             </div>

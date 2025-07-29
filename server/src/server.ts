@@ -40,6 +40,13 @@ app.post("/api/clerk-webhook", async (req, res) => {
         password: "",
       },
     });
+    console.log("User upserted:", {
+      id,
+      email,
+      firstName,
+      lastName,
+      imageUrl: image_url,
+    });
   }
   res.json({ ok: true });
 });

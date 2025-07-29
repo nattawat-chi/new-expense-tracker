@@ -77,7 +77,6 @@ export default function TransactionPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     categoryId: "",
     accountId: "",
@@ -362,16 +361,16 @@ export default function TransactionPage() {
                   <Plus className="h-4 w-4" />
                   Add Transaction
                 </Button>
+                <AddAccountModal onAdded={handleAccountAdded} />
+
                 <Button
                   variant="outline"
                   className="flex items-center gap-2"
                   onClick={() => setIsCategoryModalOpen(true)}
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Category
+                  {/* <Plus className="h-4 w-4" /> */}
+                  Manage Categories
                 </Button>
-
-                <AddAccountModal onAdded={handleAccountAdded} />
 
                 <Button
                   onClick={handleExport}
